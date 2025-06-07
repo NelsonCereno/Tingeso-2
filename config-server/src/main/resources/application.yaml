@@ -1,12 +1,12 @@
 server:
-  port: 8081
+  port: 8888
 spring:
   cloud:
     config:
       server:
         git:
           default-label: main
-          uri: https://github.com/amigo1975/microsevices-data-project
+          uri: https://github.com/NelsonCereno/Tingeso-2
           search-paths: config-data
   application:
-    name: config-service
+    name: config-server

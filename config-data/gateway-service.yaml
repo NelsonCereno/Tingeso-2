@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8085
   
 eureka:
   client:
@@ -16,6 +16,12 @@ spring:
       discovery:
         locator:
           enabled: true
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: '*'
+            allowedMethods: "*"
+            allowedHeaders: "*"
       routes:
         - id: student-service
           uri: lb://student-service

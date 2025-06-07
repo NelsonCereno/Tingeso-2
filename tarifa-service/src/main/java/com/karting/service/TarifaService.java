@@ -1,106 +1,127 @@
 package com.karting.service;
 
-import com.karting.entity.Tarifa;
+import com.karting.entity.TarifaEntity;
 import com.karting.repository.TarifaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class TarifaService {
-    
+
     @Autowired
-    private TarifaRepository tarifaRepository;
+    TarifaRepository tarifaRepository;
 
-    public List<Tarifa> obtenerTodasLasTarifas() {
-        return tarifaRepository.findAllByOrderByNumeroVueltasAsc();
+    // Constante para el IVA (19%)
+    private static final double IVA_PORCENTAJE = 0.19;
+
+    public ArrayList<TarifaEntity> obtenerTarifas(){
+        return (ArrayList<TarifaEntity>) tarifaRepository.findAll();
     }
 
-    public List<Tarifa> obtenerTarifasActivas() {
-        return tarifaRepository.findByActivoTrue();
-    }
-
-    public Optional<Tarifa> obtenerTarifaPorId(Long id) {
-        return tarifaRepository.findById(id);
-    }
-
-    public Optional<Tarifa> obtenerTarifaPorNumeroVueltas(Integer numeroVueltas) {
-        return tarifaRepository.findByNumeroVueltas(numeroVueltas);
-    }
-
-    public Optional<Tarifa> obtenerTarifaPorTipo(String tipoTarifa) {
-        return tarifaRepository.findByTipoTarifa(tipoTarifa);
-    }
-
-    @Transactional
-    public Tarifa guardarTarifa(Tarifa tarifa) {
-        // Calculamos el precio con IVA antes de guardar
-        tarifa.calcularPrecioIVA();
+    public TarifaEntity guardarTarifa(TarifaEntity tarifa){
         return tarifaRepository.save(tarifa);
     }
 
-    @Transactional
-    public void eliminarTarifa(Long id) {
-        tarifaRepository.deleteById(id);
+    public TarifaEntity obtenerPorId(Long id){
+        return tarifaRepository.findById(id).get();
     }
-    
-    public Double obtenerPrecioBasePorNumeroVueltas(Integer numeroVueltas) {
-        Optional<Tarifa> tarifaOpt = tarifaRepository.findByNumeroVueltas(numeroVueltas);
-        if (tarifaOpt.isPresent()) {
-            return tarifaOpt.get().getPrecioBase();
+
+    public TarifaEntity actualizarTarifa(TarifaEntity tarifa) {
+        return tarifaRepository.save(tarifa);
+    }
+
+    public boolean eliminarTarifa(Long id) throws Exception {
+        try{
+            tarifaRepository.deleteById(id);
+            return true;
+        } catch (Exception e) {
+            throw new Exception(e.getMessage());
         }
-        throw new RuntimeException("No existe tarifa para " + numeroVueltas + " vueltas");
     }
-    
-    public Double obtenerPrecioIVAPorNumeroVueltas(Integer numeroVueltas) {
-        Optional<Tarifa> tarifaOpt = tarifaRepository.findByNumeroVueltas(numeroVueltas);
-        if (tarifaOpt.isPresent()) {
-            return tarifaOpt.get().getPrecioIVA();
+
+    // Nueva funcionalidad: Calcular tarifa basada en la lógica del monolítico
+    public TarifaEntity calcularTarifa(int numeroVueltas, int numeroPersonas) {
+        // Validar número de personas
+        if (numeroPersonas <= 0) {
+            throw new IllegalArgumentException("El número de personas debe ser mayor a 0");
         }
-        throw new RuntimeException("No existe tarifa para " + numeroVueltas + " vueltas");
-    }
-    
-    public Integer obtenerDuracionMinutosPorNumeroVueltas(Integer numeroVueltas) {
-        Optional<Tarifa> tarifaOpt = tarifaRepository.findByNumeroVueltas(numeroVueltas);
-        if (tarifaOpt.isPresent()) {
-            return tarifaOpt.get().getDuracionMinutos();
+
+        // Precio base según número de vueltas (extraído del monolítico original)
+        double precioBase;
+        int duracionMinutos;
+        
+        switch (numeroVueltas) {
+            case 10:
+                precioBase = 15000;
+                duracionMinutos = 10;
+                break;
+            case 15:
+                precioBase = 20000;
+                duracionMinutos = 15;
+                break;
+            case 20:
+                precioBase = 25000;
+                duracionMinutos = 20;
+                break;
+            default:
+                throw new IllegalArgumentException("Número de vueltas no válido: " + numeroVueltas + 
+                    ". Opciones válidas: 10, 15, 20");
         }
-        throw new RuntimeException("No existe tarifa para " + numeroVueltas + " vueltas");
+        
+        // Calcular precio total sin descuentos
+        double precioTotal = precioBase * numeroPersonas;
+        
+        // Calcular IVA (19%)
+        double iva = precioTotal * IVA_PORCENTAJE;
+        double precioConIva = precioTotal + iva;
+        
+        // Crear entidad con todos los cálculos
+        TarifaEntity tarifa = new TarifaEntity();
+        tarifa.setNumeroVueltas(numeroVueltas);
+        tarifa.setPrecioBase(precioBase);
+        tarifa.setDuracionMinutos(duracionMinutos);
+        tarifa.setPrecioTotal(precioTotal);
+        tarifa.setIva(iva);
+        tarifa.setPrecioConIva(precioConIva);
+        
+        return tarifa;
     }
-    
-    @Transactional
-    public void inicializarTarifasPredeterminadas() {
-        // Solo inicializamos si no hay tarifas en la base de datos
-        if (tarifaRepository.count() == 0) {
-            // Tarifa para 10 vueltas
-            Tarifa tarifa10Vueltas = new Tarifa();
-            tarifa10Vueltas.setTipoTarifa("10_VUELTAS");
-            tarifa10Vueltas.setNumeroVueltas(10);
-            tarifa10Vueltas.setDuracionMinutos(15);
-            tarifa10Vueltas.setPrecioBase(10000.0);
-            tarifa10Vueltas.setActivo(true);
-            guardarTarifa(tarifa10Vueltas);
-            
-            // Tarifa para 15 vueltas
-            Tarifa tarifa15Vueltas = new Tarifa();
-            tarifa15Vueltas.setTipoTarifa("15_VUELTAS");
-            tarifa15Vueltas.setNumeroVueltas(15);
-            tarifa15Vueltas.setDuracionMinutos(20);
-            tarifa15Vueltas.setPrecioBase(13000.0);
-            tarifa15Vueltas.setActivo(true);
-            guardarTarifa(tarifa15Vueltas);
-            
-            // Tarifa para 20 vueltas
-            Tarifa tarifa20Vueltas = new Tarifa();
-            tarifa20Vueltas.setTipoTarifa("20_VUELTAS");
-            tarifa20Vueltas.setNumeroVueltas(20);
-            tarifa20Vueltas.setDuracionMinutos(25);
-            tarifa20Vueltas.setPrecioBase(15000.0);
-            tarifa20Vueltas.setActivo(true);
-            guardarTarifa(tarifa20Vueltas);
+
+    // Nueva funcionalidad: Obtener todas las tarifas disponibles
+    public List<TarifaEntity> obtenerTarifasDisponibles() {
+        List<TarifaEntity> tarifas = new ArrayList<>();
+        
+        // Generar tarifas para los tipos disponibles (como en el monolítico)
+        int[] vueltasDisponibles = {10, 15, 20};
+        
+        for (int vueltas : vueltasDisponibles) {
+            TarifaEntity tarifa = calcularTarifa(vueltas, 1); // Para 1 persona como base
+            tarifas.add(tarifa);
+        }
+        
+        return tarifas;
+    }
+
+    // Nueva funcionalidad: Obtener precio base por número de vueltas
+    public double obtenerPrecioBasePorVueltas(int numeroVueltas) {
+        switch (numeroVueltas) {
+            case 10: return 15000;
+            case 15: return 20000;
+            case 20: return 25000;
+            default: throw new IllegalArgumentException("Número de vueltas no válido: " + numeroVueltas);
+        }
+    }
+
+    // Nueva funcionalidad: Obtener duración por número de vueltas
+    public int obtenerDuracionPorVueltas(int numeroVueltas) {
+        switch (numeroVueltas) {
+            case 10: return 10;
+            case 15: return 15;
+            case 20: return 20;
+            default: throw new IllegalArgumentException("Número de vueltas no válido: " + numeroVueltas);
         }
     }
 }

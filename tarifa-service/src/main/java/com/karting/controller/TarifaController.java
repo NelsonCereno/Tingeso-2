@@ -1,143 +1,125 @@
 package com.karting.controller;
 
-import com.karting.entity.Tarifa;
+import com.karting.entity.TarifaEntity;
 import com.karting.service.TarifaService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
-@RequestMapping("/tarifas")
+@RequestMapping("/api/v1/tarifas")
+@CrossOrigin("*")
 public class TarifaController {
-    
+
     @Autowired
-    private TarifaService tarifaService;
-    
-    @PostMapping("/inicializar")
-    public ResponseEntity<String> inicializarTarifas() {
-        tarifaService.inicializarTarifasPredeterminadas();
-        return ResponseEntity.ok("Tarifas predeterminadas inicializadas correctamente");
-    }
+    TarifaService tarifaService;
 
-    @GetMapping
-    public ResponseEntity<List<Tarifa>> listarTarifas() {
-        List<Tarifa> tarifas = tarifaService.obtenerTodasLasTarifas();
-        if (tarifas.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.ok(tarifas);
-    }
-
-    @GetMapping("/activas")
-    public ResponseEntity<List<Tarifa>> listarTarifasActivas() {
-        List<Tarifa> tarifas = tarifaService.obtenerTarifasActivas();
-        if (tarifas.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
+    // Endpoints CRUD existentes
+    @GetMapping("/")
+    public ResponseEntity<List<TarifaEntity>> listTarifas() {
+        List<TarifaEntity> tarifas = tarifaService.obtenerTarifas();
         return ResponseEntity.ok(tarifas);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Tarifa> obtenerTarifaPorId(@PathVariable("id") Long id) {
-        Optional<Tarifa> tarifaOpt = tarifaService.obtenerTarifaPorId(id);
-        return tarifaOpt.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<TarifaEntity> getTarifaById(@PathVariable Long id) {
+        TarifaEntity tarifa = tarifaService.obtenerPorId(id);
+        return ResponseEntity.ok(tarifa);
     }
 
-    @GetMapping("/vueltas/{numeroVueltas}")
-    public ResponseEntity<Tarifa> obtenerTarifaPorVueltas(@PathVariable("numeroVueltas") Integer numeroVueltas) {
-        Optional<Tarifa> tarifaOpt = tarifaService.obtenerTarifaPorNumeroVueltas(numeroVueltas);
-        return tarifaOpt.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-    
-    @GetMapping("/tipo/{tipoTarifa}")
-    public ResponseEntity<Tarifa> obtenerTarifaPorTipo(@PathVariable("tipoTarifa") String tipoTarifa) {
-        Optional<Tarifa> tarifaOpt = tarifaService.obtenerTarifaPorTipo(tipoTarifa);
-        return tarifaOpt.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    @PostMapping("/")
+    public ResponseEntity<TarifaEntity> saveTarifa(@RequestBody TarifaEntity tarifa) {
+        TarifaEntity tarifaNueva = tarifaService.guardarTarifa(tarifa);
+        return ResponseEntity.ok(tarifaNueva);
     }
 
-    @GetMapping("/precio-base/{numeroVueltas}")
-    public ResponseEntity<Double> obtenerPrecioBasePorVueltas(@PathVariable("numeroVueltas") Integer numeroVueltas) {
-        try {
-            Double precio = tarifaService.obtenerPrecioBasePorNumeroVueltas(numeroVueltas);
-            return ResponseEntity.ok(precio);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-    
-    @GetMapping("/precio-iva/{numeroVueltas}")
-    public ResponseEntity<Double> obtenerPrecioIVAPorVueltas(@PathVariable("numeroVueltas") Integer numeroVueltas) {
-        try {
-            Double precio = tarifaService.obtenerPrecioIVAPorNumeroVueltas(numeroVueltas);
-            return ResponseEntity.ok(precio);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-    
-    @GetMapping("/duracion/{numeroVueltas}")
-    public ResponseEntity<Integer> obtenerDuracionPorVueltas(@PathVariable("numeroVueltas") Integer numeroVueltas) {
-        try {
-            Integer duracion = tarifaService.obtenerDuracionMinutosPorNumeroVueltas(numeroVueltas);
-            return ResponseEntity.ok(duracion);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-    
-    @GetMapping("/informacion/{numeroVueltas}")
-    public ResponseEntity<Map<String, Object>> obtenerInformacionTarifa(@PathVariable("numeroVueltas") Integer numeroVueltas) {
-        try {
-            Optional<Tarifa> tarifaOpt = tarifaService.obtenerTarifaPorNumeroVueltas(numeroVueltas);
-            if (tarifaOpt.isPresent()) {
-                Tarifa tarifa = tarifaOpt.get();
-                Map<String, Object> response = new HashMap<>();
-                response.put("tipoTarifa", tarifa.getTipoTarifa());
-                response.put("numeroVueltas", tarifa.getNumeroVueltas());
-                response.put("duracionMinutos", tarifa.getDuracionMinutos());
-                response.put("precioBase", tarifa.getPrecioBase());
-                response.put("precioIVA", tarifa.getPrecioIVA());
-                return ResponseEntity.ok(response);
-            }
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    @PostMapping
-    public ResponseEntity<Tarifa> crearTarifa(@RequestBody Tarifa tarifa) {
-        Tarifa nuevaTarifa = tarifaService.guardarTarifa(tarifa);
-        return ResponseEntity.status(HttpStatus.CREATED).body(nuevaTarifa);
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<Tarifa> actualizarTarifa(@PathVariable("id") Long id, @RequestBody Tarifa tarifa) {
-        Optional<Tarifa> tarifaOpt = tarifaService.obtenerTarifaPorId(id);
-        if (tarifaOpt.isPresent()) {
-            tarifa.setId(id);
-            Tarifa updatedTarifa = tarifaService.guardarTarifa(tarifa);
-            return ResponseEntity.ok(updatedTarifa);
-        }
-        return ResponseEntity.notFound().build();
+    @PutMapping("/")
+    public ResponseEntity<TarifaEntity> updateTarifa(@RequestBody TarifaEntity tarifa){
+        TarifaEntity tarifaActualizada = tarifaService.actualizarTarifa(tarifa);
+        return ResponseEntity.ok(tarifaActualizada);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarTarifa(@PathVariable("id") Long id) {
-        Optional<Tarifa> tarifaOpt = tarifaService.obtenerTarifaPorId(id);
-        if (tarifaOpt.isPresent()) {
-            tarifaService.eliminarTarifa(id);
-            return ResponseEntity.noContent().build();
+    public ResponseEntity<Boolean> deleteTarifaById(@PathVariable Long id) throws Exception {
+        var isDeleted = tarifaService.eliminarTarifa(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // Nuevos endpoints basados en la funcionalidad del monolítico
+    @PostMapping("/calcular")
+    public ResponseEntity<?> calcularTarifa(@RequestBody Map<String, Integer> request) {
+        try {
+            // Validar que los parámetros estén presentes
+            if (!request.containsKey("numeroVueltas") || !request.containsKey("numeroPersonas")) {
+                return ResponseEntity.badRequest()
+                    .body("Se requieren los parámetros 'numeroVueltas' y 'numeroPersonas'");
+            }
+
+            int numeroVueltas = request.get("numeroVueltas");
+            int numeroPersonas = request.get("numeroPersonas");
+            
+            // Validar rangos
+            if (numeroPersonas <= 0) {
+                return ResponseEntity.badRequest()
+                    .body("El número de personas debe ser mayor a 0");
+            }
+            
+            TarifaEntity tarifa = tarifaService.calcularTarifa(numeroVueltas, numeroPersonas);
+            return ResponseEntity.ok(tarifa);
+            
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Error interno del servidor: " + e.getMessage());
         }
-        return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/disponibles")
+    public ResponseEntity<?> obtenerTarifasDisponibles() {
+        try {
+            List<TarifaEntity> tarifas = tarifaService.obtenerTarifasDisponibles();
+            return ResponseEntity.ok(tarifas);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Error al obtener tarifas disponibles: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/precio-base/{numeroVueltas}")
+    public ResponseEntity<?> obtenerPrecioBase(@PathVariable int numeroVueltas) {
+        try {
+            double precioBase = tarifaService.obtenerPrecioBasePorVueltas(numeroVueltas);
+            return ResponseEntity.ok(Map.of(
+                "numeroVueltas", numeroVueltas,
+                "precioBase", precioBase
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Error al obtener precio base: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/duracion/{numeroVueltas}")
+    public ResponseEntity<?> obtenerDuracion(@PathVariable int numeroVueltas) {
+        try {
+            int duracion = tarifaService.obtenerDuracionPorVueltas(numeroVueltas);
+            return ResponseEntity.ok(Map.of(
+                "numeroVueltas", numeroVueltas,
+                "duracionMinutos", duracion
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Error al obtener duración: " + e.getMessage());
+        }
     }
 }

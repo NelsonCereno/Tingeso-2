@@ -1,0 +1,26 @@
+pipeline {
+    agent any
+    stages{
+        stage('Build Frontend'){
+            steps{
+                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/NelsonCereno/Tingeso-1']])
+                dir("payroll-frontend"){
+                    bat "npm install" // Use 'bat' for Windows agents or 'sh' for Unix/Linux agents
+                    bat "npm run build" // Use 'bat' for Windows agents or 'sh' for Unix/Linux agents
+                }
+            }
+        }
+        stage("Build and Push Docker Image"){
+            steps{
+                dir("payroll-frontend"){
+                    script{
+                        withDockerRegistry(credentialsId: 'docker-credentials'){
+                            bat "docker build -t nelsoncereno/payroll-frontend ."
+                            bat "docker push nelsoncereno/payroll-frontend"
+                        }
+                    }
+                }
+            }
+        }
+    }   
+}
