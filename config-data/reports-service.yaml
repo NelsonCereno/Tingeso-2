@@ -1,0 +1,97 @@
+server:
+  port: 0
+
+eureka:
+  client:
+    fetch-registry: true
+    register-with-eureka: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+  instance:
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    prefer-ip-address: true
+
+# ================================
+# CONFIGURACIÓN DE FEIGN CLIENTS
+# ================================
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 15000
+        readTimeout: 20000
+        loggerLevel: BASIC
+        
+      reserva-service:
+        connectTimeout: 10000
+        readTimeout: 15000
+        loggerLevel: FULL
+
+  circuitbreaker:
+    enabled: true
+
+# ================================
+# CONFIGURACIÓN DE CIRCUIT BREAKER
+# ================================
+resilience4j:
+  circuitbreaker:
+    instances:
+      reserva-service:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 15s
+        failureRateThreshold: 60
+
+  retry:
+    instances:
+      reserva-service:
+        maxAttempts: 3
+        waitDuration: 3s
+
+# ================================
+# CONFIGURACIÓN DE LOGGING
+# ================================
+logging:
+  level:
+    com.karting: DEBUG
+    com.karting.client: DEBUG
+    org.springframework.cloud.openfeign: DEBUG
+    feign: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# ================================
+# CONFIGURACIÓN DE ACTUATOR
+# ================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# ================================
+# CONFIGURACIÓN PERSONALIZADA - REPORTES
+# ================================
+karting:
+  reports:
+    # Configuración de cache para reportes
+    cache-duration-minutes: 10
+    
+    # Configuración de métricas
+    incluir-metricas-detalladas: true
+    
+    # Configuración de exportación
+    formatos-exportacion:
+      - JSON
+      - CSV
+      - PDF
+    
+    # Configuración de rangos de fechas
+    max-meses-consulta: 12
+    fecha-inicio-negocio: "2024-01-01"

@@ -788,4 +788,17 @@ public class ReservaService {
             System.out.println("✅ Reserva #" + reservaId + " marcada como email enviado");
         }
     }
+
+    // ✅ AGREGAR ESTE MÉTODO
+    public List<ReservaEntity> findReservasEnRangoFecha(LocalDateTime inicioDateTime, LocalDateTime finDateTime) {
+        try {
+            System.out.println("📅 Buscando reservas desde " + inicioDateTime + " hasta " + finDateTime);
+            List<ReservaEntity> reservas = reservaRepository.findReservasEnRangoFecha(inicioDateTime, finDateTime);
+            System.out.println("✅ Encontradas " + reservas.size() + " reservas en el rango");
+            return reservas;
+        } catch (Exception e) {
+            System.err.println("❌ Error al buscar reservas en rango: " + e.getMessage());
+            throw new RuntimeException("Error al buscar reservas: " + e.getMessage(), e);
+        }
+    }
 }

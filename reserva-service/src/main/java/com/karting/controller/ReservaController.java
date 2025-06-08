@@ -297,24 +297,33 @@ public class ReservaController {
         }
     }
 
-    // NUEVO: Endpoint para rack-service
+    // NUEVO: Endpoint para rack-service (USANDO SERVICE)
     @GetMapping("/por-fechas")
     public ResponseEntity<List<ReservaResponse>> obtenerReservasPorFechas(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
         
         try {
+            System.out.println("📅 Endpoint /por-fechas llamado: " + fechaInicio + " - " + fechaFin);
+            
             LocalDateTime inicioDateTime = fechaInicio.atStartOfDay();
             LocalDateTime finDateTime = fechaFin.atTime(23, 59, 59);
             
+            // ✅ USAR EL SERVICE
             List<ReservaEntity> reservas = reservaService.findReservasEnRangoFecha(inicioDateTime, finDateTime);
+            
             List<ReservaResponse> reservasResponse = reservas.stream()
                 .map(ReservaResponse::new)
                 .collect(Collectors.toList());
             
+            System.out.println("✅ Retornando " + reservasResponse.size() + " reservas");
             return ResponseEntity.ok(reservasResponse);
+            
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            System.err.println("❌ Error en endpoint por-fechas: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ArrayList<>());
         }
     }
 

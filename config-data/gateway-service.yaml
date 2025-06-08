@@ -97,3 +97,11 @@ spring:
             - Path=/RACK-SERVICE/**
           filters:
             - StripPrefix=1
+
+        # M7 - Reports Service (RF8)
+        - id: reports-service
+          uri: lb://reports-service
+          predicates:
+            - Path=/reports-service/**
+          filters:
+            - StripPrefix=1
