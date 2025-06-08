@@ -159,11 +159,13 @@ public class ReservaEntity {
     
     // Calcular precio total
     public void calcularPrecioTotal() {
-        calcularDescuentoTotal();
-        this.precioTotal = (this.precioBase != null ? this.precioBase : 0.0) - this.descuentoTotal;
-        if (this.precioTotal < 0) {
-            this.precioTotal = 0.0;
-        }
+        if (precioBase == null) precioBase = 0.0;
+        if (descuentoPersonas == null) descuentoPersonas = 0.0;
+        if (descuentoClientes == null) descuentoClientes = 0.0;
+        if (descuentoCumpleanos == null) descuentoCumpleanos = 0.0;
+        
+        double descuentoTotal = descuentoPersonas + descuentoClientes + descuentoCumpleanos;
+        this.precioTotal = Math.max(0, precioBase - descuentoTotal);
     }
     
     // Confirmar reserva

@@ -122,4 +122,29 @@ public class TarifaController {
                 .body("Error al obtener duración: " + e.getMessage());
         }
     }
+
+    @GetMapping("/calcular/{duracionMinutos}")
+    public ResponseEntity<Double> calcularTarifaPorDuracion(@PathVariable Integer duracionMinutos) {
+        try {
+            // Validar duración
+            if (duracionMinutos <= 0) {
+                return ResponseEntity.badRequest().build();
+            }
+            
+            // Lógica basada en la tabla de precios del negocio (PRECIO POR PERSONA)
+            Double precioBasePorPersona = tarifaService.calcularTarifaPorDuracion(duracionMinutos);
+            
+            System.out.println("💰 Precio base POR PERSONA para " + duracionMinutos + " minutos: $" + precioBasePorPersona);
+            return ResponseEntity.ok(precioBasePorPersona);
+            
+        } catch (Exception e) {
+            System.err.println("❌ Error al calcular tarifa: " + e.getMessage());
+            return ResponseEntity.status(500).build();
+        }
+    }
+
+    @GetMapping("/health")
+    public ResponseEntity<String> healthCheck() {
+        return ResponseEntity.ok("Tarifa Service is running! 💰");
+    }
 }

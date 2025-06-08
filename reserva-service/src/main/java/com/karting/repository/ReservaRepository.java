@@ -35,17 +35,19 @@ public interface ReservaRepository extends JpaRepository<ReservaEntity, Long> {
     // Buscar reservas por número de personas
     List<ReservaEntity> findByNumeroPersonas(Integer numeroPersonas);
     
-    // Buscar reservas del día actual
-    @Query("SELECT r FROM ReservaEntity r WHERE DATE(r.fechaHora) = CURRENT_DATE")
-    List<ReservaEntity> findReservasDelDia();
+    // Buscar reservas del día actual (SIMPLIFICADO)
+    @Query("SELECT r FROM ReservaEntity r WHERE r.fechaHora >= :inicioDelDia AND r.fechaHora < :finDelDia")
+    List<ReservaEntity> findReservasDelDia(@Param("inicioDelDia") LocalDateTime inicioDelDia, 
+                                          @Param("finDelDia") LocalDateTime finDelDia);
     
     // Buscar reservas pendientes
     @Query("SELECT r FROM ReservaEntity r WHERE r.estado = 'PENDIENTE'")
     List<ReservaEntity> findReservasPendientes();
     
-    // Buscar reservas confirmadas para hoy
-    @Query("SELECT r FROM ReservaEntity r WHERE r.estado = 'CONFIRMADA' AND DATE(r.fechaHora) = CURRENT_DATE")
-    List<ReservaEntity> findReservasConfirmadasHoy();
+    // Buscar reservas confirmadas para hoy (SIMPLIFICADO)
+    @Query("SELECT r FROM ReservaEntity r WHERE r.estado = 'CONFIRMADA' AND r.fechaHora >= :inicioDelDia AND r.fechaHora < :finDelDia")
+    List<ReservaEntity> findReservasConfirmadasHoy(@Param("inicioDelDia") LocalDateTime inicioDelDia,
+                                                  @Param("finDelDia") LocalDateTime finDelDia);
     
     // Buscar reservas en proceso
     @Query("SELECT r FROM ReservaEntity r WHERE r.estado = 'EN_PROCESO'")
@@ -59,12 +61,7 @@ public interface ReservaRepository extends JpaRepository<ReservaEntity, Long> {
     @Query("SELECT r FROM ReservaEntity r WHERE r.emailEnviado = false AND r.estado = 'CONFIRMADA'")
     List<ReservaEntity> findReservasSinEmailEnviado();
     
-    // Estadísticas de ingresos por período
-    @Query("SELECT DATE(r.fechaHora), SUM(r.precioTotal), COUNT(r) FROM ReservaEntity r " +
-           "WHERE r.estado = 'COMPLETADA' AND r.fechaHora BETWEEN :fechaInicio AND :fechaFin " +
-           "GROUP BY DATE(r.fechaHora) ORDER BY DATE(r.fechaHora)")
-    List<Object[]> findIngresosPorPeriodo(@Param("fechaInicio") LocalDateTime fechaInicio, 
-                                         @Param("fechaFin") LocalDateTime fechaFin);
+    // ESTADÍSTICAS SIMPLIFICADAS (sin DATE())
     
     // Promedio de precio total
     @Query("SELECT AVG(r.precioTotal) FROM ReservaEntity r WHERE r.estado = 'COMPLETADA'")
@@ -85,15 +82,29 @@ public interface ReservaRepository extends JpaRepository<ReservaEntity, Long> {
     
     // Buscar reservas que pueden ser completadas automáticamente
     @Query("SELECT r FROM ReservaEntity r WHERE r.estado = 'EN_PROCESO' AND " +
-           "r.fechaHora + INTERVAL r.duracionMinutos MINUTE < CURRENT_TIMESTAMP")
-    List<ReservaEntity> findReservasParaCompletar();
+           "r.fechaHora < :fechaLimite")
+    List<ReservaEntity> findReservasParaCompletar(@Param("fechaLimite") LocalDateTime fechaLimite);
     
-    // Verificar conflictos de horarios con karts
-    @Query("SELECT r FROM ReservaEntity r WHERE r.estado IN ('CONFIRMADA', 'EN_PROCESO') AND " +
-           "r.fechaHora < :fechaFin AND " +
-           "r.fechaHora + INTERVAL r.duracionMinutos MINUTE > :fechaInicio AND " +
-           "EXISTS (SELECT 1 FROM r.kartsIds k WHERE k IN :kartsIds)")
-    List<ReservaEntity> findConflictosHorarios(@Param("fechaInicio") LocalDateTime fechaInicio,
-                                              @Param("fechaFin") LocalDateTime fechaFin,
-                                              @Param("kartsIds") List<Long> kartsIds);
+    // Query adicional para verificar conflictos específicos con karts
+    @Query("SELECT r FROM ReservaEntity r WHERE " +
+           "(r.estado = 'CONFIRMADA' OR r.estado = 'EN_PROCESO') AND " +
+           "r.fechaHora BETWEEN :fechaInicio AND :fechaFin")
+    List<ReservaEntity> findReservasEnRangoFecha(@Param("fechaInicio") LocalDateTime fechaInicio,
+                                                @Param("fechaFin") LocalDateTime fechaFin);
+    
+    // OBTENER ESTADÍSTICAS BÁSICAS (sin problemas de sintaxis)
+    
+    // Total de reservas por estado específico
+    @Query("SELECT COUNT(r) FROM ReservaEntity r WHERE r.estado = :estado")
+    Long countByEstado(@Param("estado") ReservaEntity.EstadoReserva estado);
+    
+    // Reservas completadas en rango de fechas
+    @Query("SELECT r FROM ReservaEntity r WHERE r.estado = 'COMPLETADA' AND r.fechaHora BETWEEN :fechaInicio AND :fechaFin")
+    List<ReservaEntity> findReservasCompletadasEnRango(@Param("fechaInicio") LocalDateTime fechaInicio,
+                                                      @Param("fechaFin") LocalDateTime fechaFin);
+    
+    // Total de ingresos en rango de fechas
+    @Query("SELECT SUM(r.precioTotal) FROM ReservaEntity r WHERE r.estado = 'COMPLETADA' AND r.fechaHora BETWEEN :fechaInicio AND :fechaFin")
+    Double findTotalIngresosEnRango(@Param("fechaInicio") LocalDateTime fechaInicio,
+                                   @Param("fechaFin") LocalDateTime fechaFin);
 }

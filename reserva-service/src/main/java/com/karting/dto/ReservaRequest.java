@@ -1,7 +1,5 @@
 package com.karting.dto;
 
-import com.karting.entity.KartEntity;
-
 import java.time.LocalDateTime;
 import java.util.List;
 

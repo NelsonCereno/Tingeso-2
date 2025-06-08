@@ -1,5 +1,7 @@
 package com.karting.dto;
 
+import java.util.List;
+
 public class CalculoPrecioResponse {
     private Double precioBase;
     private Double descuentoPersonas;
@@ -8,6 +10,7 @@ public class CalculoPrecioResponse {
     private Double descuentoTotal;
     private Double precioFinal;
     private String detalleCalculo;
+    private List<PrecioIndividualCliente> preciosIndividuales;
 
     // Constructor vacío
     public CalculoPrecioResponse() {}
@@ -63,4 +66,12 @@ public class CalculoPrecioResponse {
 
     public String getDetalleCalculo() { return detalleCalculo; }
     public void setDetalleCalculo(String detalleCalculo) { this.detalleCalculo = detalleCalculo; }
+
+    public List<PrecioIndividualCliente> getPreciosIndividuales() { 
+        return preciosIndividuales; 
+    }
+
+    public void setPreciosIndividuales(List<PrecioIndividualCliente> preciosIndividuales) { 
+        this.preciosIndividuales = preciosIndividuales; 
+    }
 }

@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -318,5 +319,83 @@ public class ClienteController {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.ok(topClientes);
+    }
+    
+    // ====================================
+    // NUEVOS ENDPOINTS PARA RESERVA-SERVICE
+    // ====================================
+
+    // Obtener número de visitas de un cliente específico
+    @GetMapping("/{clienteId}/visitas")
+    public ResponseEntity<Integer> obtenerNumeroVisitas(@PathVariable Long clienteId) {
+        try {
+            ClienteResponse cliente = clienteService.obtenerClientePorId(clienteId);
+            return ResponseEntity.ok(cliente.getNumeroVisitas());
+        } catch (RuntimeException e) {
+            // Si el cliente no existe, retornar 0 visitas
+            return ResponseEntity.ok(0);
+        }
+    }
+
+    // Verificar existencia de múltiples clientes
+    @PostMapping("/verificar-existencia")
+    public ResponseEntity<Boolean> verificarExistenciaClientes(@RequestBody List<Long> clientesIds) {
+        try {
+            if (clientesIds == null || clientesIds.isEmpty()) {
+                return ResponseEntity.ok(false);
+            }
+
+            // Verificar que todos los clientes existen y están activos
+            for (Long clienteId : clientesIds) {
+                if (!clienteService.existeCliente(clienteId) || !clienteService.clienteEstaActivo(clienteId)) {
+                    return ResponseEntity.ok(false);
+                }
+            }
+            
+            return ResponseEntity.ok(true);
+        } catch (Exception e) {
+            return ResponseEntity.ok(false);
+        }
+    }
+
+    // Verificar clientes que están de cumpleaños
+    @PostMapping("/verificar-cumpleanos")
+    public ResponseEntity<List<Long>> verificarClientesCumpleanos(@RequestBody List<Long> clientesIds) {
+        try {
+            if (clientesIds == null || clientesIds.isEmpty()) {
+                return ResponseEntity.ok(List.of());
+            }
+
+            List<Long> clientesCumpleanos = new ArrayList<>();
+            LocalDate hoy = LocalDate.now();
+
+            for (Long clienteId : clientesIds) {
+                try {
+                    ClienteResponse cliente = clienteService.obtenerClientePorId(clienteId);
+                    if (cliente.getEsCumpleanosHoy() != null && cliente.getEsCumpleanosHoy()) {
+                        clientesCumpleanos.add(clienteId);
+                    }
+                } catch (RuntimeException e) {
+                    // Si el cliente no existe, simplemente continuar
+                    continue;
+                }
+            }
+
+            return ResponseEntity.ok(clientesCumpleanos);
+        } catch (Exception e) {
+            return ResponseEntity.ok(List.of());
+        }
+    }
+
+    // Verificar un cliente individual
+    @GetMapping("/verificar/{clienteId}")
+    public ResponseEntity<Boolean> verificarCliente(@PathVariable Long clienteId) {
+        try {
+            boolean existe = clienteService.existeCliente(clienteId);
+            boolean activo = clienteService.clienteEstaActivo(clienteId);
+            return ResponseEntity.ok(existe && activo);
+        } catch (Exception e) {
+            return ResponseEntity.ok(false);
+        }
     }
 }

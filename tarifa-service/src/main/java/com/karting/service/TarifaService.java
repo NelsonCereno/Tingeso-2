@@ -142,4 +142,38 @@ public class TarifaService {
             default: throw new IllegalArgumentException("Número de vueltas no válido: " + numeroVueltas);
         }
     }
+
+    // Calcular tarifa por duración en minutos (PRECIO POR PERSONA)
+    public Double calcularTarifaPorDuracion(Integer duracionMinutos) {
+        if (duracionMinutos <= 0) {
+            throw new IllegalArgumentException("La duración debe ser mayor a 0 minutos");
+        }
+        
+        // LÓGICA BASADA EN LA ESPECIFICACIÓN DEL CASO:
+        // 10 vueltas o máx 10 min = $15,000 POR PERSONA (duración total: 30 min)
+        // 15 vueltas o máx 15 min = $20,000 POR PERSONA (duración total: 35 min)  
+        // 20 vueltas o máx 20 min = $25,000 POR PERSONA (duración total: 40 min)
+        
+        Double precioBasePorPersona;
+        
+        // Determinar precio base según duración solicitada
+        if (duracionMinutos <= 30) {
+            // Hasta 30 minutos = tarifa de 10 vueltas
+            precioBasePorPersona = 15000.0;
+        } else if (duracionMinutos <= 35) {
+            // 31-35 minutos = tarifa de 15 vueltas
+            precioBasePorPersona = 20000.0;
+        } else if (duracionMinutos <= 40) {
+            // 36-40 minutos = tarifa de 20 vueltas
+            precioBasePorPersona = 25000.0;
+        } else {
+            // Más de 40 minutos = tarifa proporcional basada en 20 vueltas
+            // $25,000 por 40 min = $625 por minuto
+            double tarifaPorMinuto = 25000.0 / 40.0;
+            precioBasePorPersona = duracionMinutos * tarifaPorMinuto;
+        }
+        
+        System.out.println("💰 Precio base POR PERSONA para " + duracionMinutos + " minutos: $" + precioBasePorPersona);
+        return precioBasePorPersona;
+    }
 }

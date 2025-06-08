@@ -25,36 +25,85 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
-# Configuración específica para Feign Clients
+  # ================================
+  # CONFIGURACIÓN DE EMAIL - GMAIL (CORREGIDA)
+  # ================================
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: nelson.cereno.lpsj@gmail.com        
+    password: iuvs utgp vciv jetu           
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 3000
+          writetimeout: 5000
+        debug: false
+    default-encoding: UTF-8
+    test-connection: false
+
+# ================================
+# CONFIGURACIÓN DE FEIGN (Spring Boot 2.5.4)
+# ================================
 feign:
   client:
     config:
       default:
-        connectTimeout: 5000
-        readTimeout: 10000
-        loggerLevel: basic
+        connectTimeout: 10000
+        readTimeout: 15000
+        loggerLevel: BASIC
+        
       tarifa-service:
-        connectTimeout: 3000
-        readTimeout: 5000
+        connectTimeout: 5000
+        readTimeout: 8000
+        
       descuento-personas-service:
-        connectTimeout: 3000
-        readTimeout: 5000
+        connectTimeout: 5000
+        readTimeout: 8000
+        
       descuento-clientes-service:
-        connectTimeout: 3000
-        readTimeout: 5000
+        connectTimeout: 5000
+        readTimeout: 8000
+        
       descuento-cumpleanos-service:
-        connectTimeout: 3000
-        readTimeout: 5000
+        connectTimeout: 5000
+        readTimeout: 8000
+        
       cliente-service:
-        connectTimeout: 5000
-        readTimeout: 8000
+        connectTimeout: 8000
+        readTimeout: 12000
+        
       kart-service:
-        connectTimeout: 5000
-        readTimeout: 8000
+        connectTimeout: 8000
+        readTimeout: 12000
 
-# Configuración de logging
+# ================================
+# CONFIGURACIÓN DE LOGGING
+# ================================
 logging:
   level:
     com.karting: DEBUG
+    com.karting.client: DEBUG
+    com.karting.service: INFO
     org.springframework.cloud.openfeign: DEBUG
     feign: DEBUG
+    org.springframework.mail: DEBUG
+    org.hibernate.SQL: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# ================================
+# CONFIGURACIÓN DE ACTUATOR (Spring Boot 2.5.4)
+# ================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always

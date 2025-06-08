@@ -2,35 +2,37 @@ package com.karting.client;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
-import java.util.Map;
 
 @FeignClient(name = "cliente-service", path = "/api/v1/clientes")
 public interface ClienteClient {
     
-    // Obtener cliente por ID
-    @GetMapping("/{id}")
-    ResponseEntity<Map<String, Object>> obtenerClientePorId(@PathVariable Long id);
-    
-    // Verificar si clientes existen
+    // Verificar existencia de múltiples clientes
     @PostMapping("/verificar-existencia")
-    ResponseEntity<List<Long>> verificarExistenciaClientes(@RequestBody List<Long> clientesIds);
+    ResponseEntity<Boolean> verificarExistenciaClientes(@RequestBody List<Long> clientesIds);
     
-    // Incrementar visitas de clientes
-    @PostMapping("/incrementar-visitas")
-    ResponseEntity<List<Map<String, Object>>> incrementarVisitas(@RequestBody List<Long> clientesIds);
+    // Verificar cliente individual
+    @GetMapping("/verificar/{clienteId}")
+    ResponseEntity<Boolean> verificarCliente(@PathVariable Long clienteId);
     
-    // Obtener información básica de múltiples clientes
-    @PostMapping("/informacion-basica")
-    ResponseEntity<List<Map<String, Object>>> obtenerInformacionBasica(@RequestBody List<Long> clientesIds);
+    // Obtener número de visitas de un cliente
+    @GetMapping("/{clienteId}/visitas")
+    ResponseEntity<Integer> obtenerNumeroVisitas(@PathVariable Long clienteId);
     
-    // Verificar si hay clientes de cumpleaños
+    // Verificar clientes que están de cumpleaños
     @PostMapping("/verificar-cumpleanos")
     ResponseEntity<List<Long>> verificarClientesCumpleanos(@RequestBody List<Long> clientesIds);
     
-    // Obtener número total de visitas de un cliente
-    @GetMapping("/{id}/visitas")
-    ResponseEntity<Integer> obtenerNumeroVisitas(@PathVariable Long id);
+    // Health check
+    @GetMapping("/health")
+    ResponseEntity<String> healthCheck();
+
+    // Obtener cliente por ID
+    @GetMapping("/{clienteId}")
+    ResponseEntity<Object> obtenerClientePorId(@PathVariable Long clienteId);
 }
