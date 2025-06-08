@@ -6,7 +6,7 @@ eureka:
     fetch-registry: true
     register-with-eureka: true
     service-url:
-      default-zone: http://localhost:8761/eureka
+      defaultZone: http://localhost:8761/eureka
   instance:
     hostname: localhost
 
@@ -23,15 +23,22 @@ spring:
             allowedMethods: "*"
             allowedHeaders: "*"
       routes:
-        - id: student-service
-          uri: lb://student-service
+        - id: tarifa-service
+          uri: lb://tarifa-service
           predicates:
-            - Path=/student/**
-        - id: book-service
-          uri: lb://book-service
-          predicates:
-            - Path=/book/**
-        - id: pet-service
-          uri: lb://pet-service
-          predicates:
-            - Path=/pet/**
+            - Path=/tarifa-service/**
+          filters:
+            - StripPrefix=1
+        # Agrega más servicios cuando los tengas:
+        # - id: reserva-service
+        #   uri: lb://reserva-service
+        #   predicates:
+        #     - Path=/reserva-service/**
+        #   filters:
+        #     - StripPrefix=1
+        # - id: usuario-service
+        #   uri: lb://usuario-service
+        #   predicates:
+        #     - Path=/usuario-service/**
+        #   filters:
+        #     - StripPrefix=1

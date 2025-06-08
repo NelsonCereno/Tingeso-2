@@ -29,6 +29,12 @@ public class TarifaEntity {
     @Column(name = "precio_con_iva")
     private Double precioConIva;
 
+    @Column(name = "tipo_tarifa")
+    private String tipoTarifa;
+
+    @Column(name = "activo")
+    private Boolean activo = true;
+
     // Constructores
     public TarifaEntity() {}
 
@@ -59,4 +65,10 @@ public class TarifaEntity {
 
     public Double getPrecioConIva() { return precioConIva; }
     public void setPrecioConIva(Double precioConIva) { this.precioConIva = precioConIva; }
+
+    public String getTipoTarifa() { return tipoTarifa; }
+    public void setTipoTarifa(String tipoTarifa) { this.tipoTarifa = tipoTarifa; }
+
+    public Boolean getActivo() { return activo; }
+    public void setActivo(Boolean activo) { this.activo = activo; }
 }
