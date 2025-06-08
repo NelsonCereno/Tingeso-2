@@ -54,9 +54,6 @@ public interface KartRepository extends JpaRepository<KartEntity, Long> {
 
     // Métodos de gestión de estados
     
-    // Buscar karts reservados
-    List<KartEntity> findByEstadoAndActivoTrue(KartEntity.EstadoKart estado);
-    
     // Buscar karts en mantenimiento
     @Query("SELECT k FROM KartEntity k WHERE k.estado = 'MANTENIMIENTO' AND k.activo = true ORDER BY k.mantenimientoProgramado ASC")
     List<KartEntity> findKartsEnMantenimiento();
@@ -125,11 +122,6 @@ public interface KartRepository extends JpaRepository<KartEntity, Long> {
     // Buscar karts por observaciones
     @Query("SELECT k FROM KartEntity k WHERE LOWER(k.observaciones) LIKE LOWER(CONCAT('%', :termino, '%')) AND k.activo = true")
     List<KartEntity> findKartsPorObservaciones(@Param("termino") String termino);
-    
-    // Estadísticas de mantenimiento
-    @Query("SELECT DATE(k.mantenimientoProgramado), COUNT(k) FROM KartEntity k WHERE k.estado = 'MANTENIMIENTO' AND k.activo = true " +
-           "GROUP BY DATE(k.mantenimientoProgramado) ORDER BY DATE(k.mantenimientoProgramado)")
-    List<Object[]> findEstadisticasMantenimientoPorFecha();
 
     // Métodos de optimización para el orquestador
     
@@ -146,22 +138,21 @@ public interface KartRepository extends JpaRepository<KartEntity, Long> {
     @Query("SELECT k FROM KartEntity k WHERE k.estado = 'DISPONIBLE' AND k.activo = true AND k.id NOT IN :idsExcluidos")
     List<KartEntity> findKartsDisponiblesExcluyendo(@Param("idsExcluidos") List<Long> idsExcluidos);
 
-    // Métodos para reportes y dashboards
+    // Métodos para reportes y dashboards (SIMPLIFICADOS)
     
-    // Estadísticas generales de flota
+    // Estadísticas generales de flota (CORREGIDO)
     @Query("SELECT " +
-           "COUNT(k) as total, " +
-           "SUM(CASE WHEN k.estado = 'DISPONIBLE' THEN 1 ELSE 0 END) as disponibles, " +
-           "SUM(CASE WHEN k.estado = 'RESERVADO' THEN 1 ELSE 0 END) as reservados, " +
-           "SUM(CASE WHEN k.estado = 'MANTENIMIENTO' THEN 1 ELSE 0 END) as mantenimiento, " +
-           "SUM(CASE WHEN k.estado = 'FUERA_SERVICIO' THEN 1 ELSE 0 END) as fueraServicio " +
+           "COUNT(k), " +
+           "SUM(CASE WHEN k.estado = 'DISPONIBLE' THEN 1 ELSE 0 END), " +
+           "SUM(CASE WHEN k.estado = 'RESERVADO' THEN 1 ELSE 0 END), " +
+           "SUM(CASE WHEN k.estado = 'MANTENIMIENTO' THEN 1 ELSE 0 END), " +
+           "SUM(CASE WHEN k.estado = 'FUERA_SERVICIO' THEN 1 ELSE 0 END) " +
            "FROM KartEntity k WHERE k.activo = true")
     Object[] findEstadisticasGeneralesFlota();
     
-    // Utilización promedio por período
-    @Query("SELECT DATE(k.ultimaReserva), COUNT(k), AVG(k.numeroUsos) FROM KartEntity k WHERE k.activo = true " +
-           "AND k.ultimaReserva BETWEEN :fechaInicio AND :fechaFin " +
-           "GROUP BY DATE(k.ultimaReserva) ORDER BY DATE(k.ultimaReserva)")
-    List<Object[]> findUtilizacionPorPeriodo(@Param("fechaInicio") LocalDateTime fechaInicio, 
-                                            @Param("fechaFin") LocalDateTime fechaFin);
+    // Utilización promedio por período (SIMPLIFICADO)
+    @Query("SELECT COUNT(k), AVG(k.numeroUsos) FROM KartEntity k WHERE k.activo = true " +
+           "AND k.ultimaReserva BETWEEN :fechaInicio AND :fechaFin")
+    Object[] findUtilizacionPorPeriodo(@Param("fechaInicio") LocalDateTime fechaInicio, 
+                                      @Param("fechaFin") LocalDateTime fechaFin);
 }

@@ -59,3 +59,9 @@ spring:
             - Path=/kart-service/**
           filters:
             - StripPrefix=1
+        - id: reserva-service
+          uri: lb://RESERVA-SERVICE
+          predicates:
+            - Path=/reserva-service/**
+          filters:
+            - StripPrefix=1

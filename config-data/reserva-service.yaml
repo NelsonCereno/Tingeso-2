@@ -1,0 +1,60 @@
+server:
+  port: 0
+
+eureka:
+  client:
+    fetch-registry: true
+    register-with-eureka: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+  instance:
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    prefer-ip-address: true
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/reservas2
+    username: postgres
+    password: bajoterra
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+# Configuración específica para Feign Clients
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 10000
+        loggerLevel: basic
+      tarifa-service:
+        connectTimeout: 3000
+        readTimeout: 5000
+      descuento-personas-service:
+        connectTimeout: 3000
+        readTimeout: 5000
+      descuento-clientes-service:
+        connectTimeout: 3000
+        readTimeout: 5000
+      descuento-cumpleanos-service:
+        connectTimeout: 3000
+        readTimeout: 5000
+      cliente-service:
+        connectTimeout: 5000
+        readTimeout: 8000
+      kart-service:
+        connectTimeout: 5000
+        readTimeout: 8000
+
+# Configuración de logging
+logging:
+  level:
+    com.karting: DEBUG
+    org.springframework.cloud.openfeign: DEBUG
+    feign: DEBUG

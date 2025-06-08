@@ -337,7 +337,7 @@ public class KartService {
         return idsDisponibles.size() == kartsIds.size();
     }
 
-    // Métodos de estadísticas y reportes
+    // Métodos de estadísticas y reportes (SIMPLIFICADOS)
     
     // Obtener estadísticas generales
     public EstadisticasKartsResponse obtenerEstadisticasGenerales() {
@@ -377,7 +377,7 @@ public class KartService {
                 .collect(Collectors.toList());
     }
 
-    // Clase para estadísticas
+    // Clase para estadísticas (SIMPLIFICADA)
     public static class EstadisticasKartsResponse {
         private Object[] estadisticasGenerales;
         private List<Object[]> distribucionEstados;
