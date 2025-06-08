@@ -41,3 +41,9 @@ spring:
             - Path=/descuento-clientes-service/**
           filters:
             - StripPrefix=1
+        - id: descuento-cumpleanos-service
+          uri: lb://DESCUENTO-CUMPLEANOS-SERVICE
+          predicates:
+            - Path=/descuento-cumpleanos-service/**
+          filters:
+            - StripPrefix=1
