@@ -11,6 +11,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class RackService {
@@ -18,8 +19,14 @@ public class RackService {
     @Autowired
     private ReservaClient reservaClient;
 
-    @Value("${karting.rack.bloques-horario}")
-    private List<String> bloquesHorario;
+    // ✅ CAMBIAR: Usar String en lugar de List
+    @Value("${karting.rack.bloques-horario:09:00-10:00,10:00-11:00,11:00-12:00,12:00-13:00,14:00-15:00,15:00-16:00,16:00-17:00,17:00-18:00,18:00-19:00,19:00-20:00}")
+    private String bloquesHorarioString;
+
+    // ✅ AGREGAR: Método para obtener los bloques como lista
+    private List<String> getBloquesHorario() {
+        return Arrays.asList(bloquesHorarioString.split(","));
+    }
 
     /**
      * RF7 - Obtener rack semanal completo
@@ -112,7 +119,7 @@ public class RackService {
             // Filtrar reservas que ocupan ese bloque
             List<ReservaDto> reservasEnBloque = reservas.stream()
                 .filter(reserva -> reservaOcupaBloque(reserva, bloque))
-                .toList();
+                .collect(Collectors.toList());
 
             // Calcular ocupación (simplificado)
             int personasOcupadas = reservasEnBloque.stream()
@@ -168,6 +175,7 @@ public class RackService {
 
         // Inicializar estructura del rack
         String[] diasSemana = {"Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"};
+        List<String> bloquesHorario = getBloquesHorario(); // ✅ USAR método
 
         // Inicializar días y bloques vacíos
         for (String dia : diasSemana) {

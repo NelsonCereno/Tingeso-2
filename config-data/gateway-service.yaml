@@ -1,67 +1,99 @@
 server:
   port: 8085
-  
+
 eureka:
   client:
     fetch-registry: true
     register-with-eureka: true
     service-url:
       defaultZone: http://localhost:8761/eureka
-  instance:
-    hostname: localhost
 
 spring:
+  application:
+    name: gateway-service
   cloud:
     gateway:
       discovery:
         locator:
           enabled: true
+          lower-case-service-id: true  # ✅ AGREGAR: Convierte nombres a minúsculas
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
       globalcors:
-        cors-configurations:
+        corsConfigurations:
           '[/**]':
-            allowedOrigins: '*'
+            allowedOriginPatterns: "*"
             allowedMethods: "*"
             allowedHeaders: "*"
+            allowCredentials: true
       routes:
+        # M1 - Tarifa Service
         - id: tarifa-service
           uri: lb://tarifa-service
           predicates:
             - Path=/tarifa-service/**
           filters:
             - StripPrefix=1
+
+        # M2 - Descuento Personas Service  
         - id: descuento-personas-service
-          uri: lb://DESCUENTO-PERSONAS-SERVICE
+          uri: lb://descuento-personas-service
           predicates:
             - Path=/descuento-personas-service/**
           filters:
             - StripPrefix=1
+
+        # M3 - Descuento Clientes Service
         - id: descuento-clientes-service
-          uri: lb://DESCUENTO-CLIENTES-SERVICE
+          uri: lb://descuento-clientes-service
           predicates:
             - Path=/descuento-clientes-service/**
           filters:
             - StripPrefix=1
+
+        # M4 - Descuento Cumpleanos Service
         - id: descuento-cumpleanos-service
-          uri: lb://DESCUENTO-CUMPLEANOS-SERVICE
+          uri: lb://descuento-cumpleanos-service
           predicates:
             - Path=/descuento-cumpleanos-service/**
           filters:
             - StripPrefix=1
+
+        # Cliente Service
         - id: cliente-service
-          uri: lb://CLIENTE-SERVICE
+          uri: lb://cliente-service
           predicates:
             - Path=/cliente-service/**
           filters:
             - StripPrefix=1
+
+        # Kart Service
         - id: kart-service
-          uri: lb://KART-SERVICE
+          uri: lb://kart-service
           predicates:
             - Path=/kart-service/**
           filters:
             - StripPrefix=1
+
+        # M5 - Reserva Service
         - id: reserva-service
-          uri: lb://RESERVA-SERVICE
+          uri: lb://reserva-service
           predicates:
             - Path=/reserva-service/**
+          filters:
+            - StripPrefix=1
+
+        # M6 - Rack Service (RF7) - Con soporte para mayúsculas y minúsculas
+        - id: rack-service-lower
+          uri: lb://rack-service
+          predicates:
+            - Path=/rack-service/**
+          filters:
+            - StripPrefix=1
+
+        - id: rack-service-upper
+          uri: lb://RACK-SERVICE
+          predicates:
+            - Path=/RACK-SERVICE/**
           filters:
             - StripPrefix=1
