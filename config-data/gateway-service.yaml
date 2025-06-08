@@ -29,6 +29,12 @@ spring:
             - Path=/tarifa-service/**
           filters:
             - StripPrefix=1
+        - id: descuento-personas-service
+          uri: lb://DESCUENTO-PERSONAS-SERVICE
+          predicates:
+            - Path=/descuento-personas-service/**
+          filters:
+            - StripPrefix=1
         # Agrega más servicios cuando los tengas:
         # - id: reserva-service
         #   uri: lb://reserva-service
