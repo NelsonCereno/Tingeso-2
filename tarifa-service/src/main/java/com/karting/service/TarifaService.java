@@ -5,17 +5,50 @@ import com.karting.repository.TarifaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
 public class TarifaService {
 
     @Autowired
-    TarifaRepository tarifaRepository;
+    private TarifaRepository tarifaRepository;
 
     // Constante para el IVA (19%)
     private static final double IVA_PORCENTAJE = 0.19;
+
+    @PostConstruct
+    public void inicializarDatos() {
+        // Solo insertar si la tabla está vacía
+        if (tarifaRepository.count() == 0) {
+            List<TarifaEntity> tarifasIniciales = Arrays.asList(
+                crearTarifa(10, 15000.0, 10),
+                crearTarifa(15, 20000.0, 15),
+                crearTarifa(20, 25000.0, 20)
+            );
+            tarifaRepository.saveAll(tarifasIniciales);
+            System.out.println("Datos iniciales insertados en la base de datos");
+        }
+    }
+
+    private TarifaEntity crearTarifa(int vueltas, double precio, int duracion) {
+        TarifaEntity tarifa = new TarifaEntity();
+        tarifa.setNumeroVueltas(vueltas);
+        tarifa.setPrecioBase(precio);
+        tarifa.setDuracionMinutos(duracion);
+        tarifa.setPrecioTotal(precio);
+        tarifa.setIva(precio * 0.19);
+        tarifa.setPrecioConIva(precio + (precio * 0.19));
+        tarifa.setActivo(true);
+        return tarifa;
+    }
+
+    public List<TarifaEntity> obtenerTarifasDisponibles() {
+        // Ahora SÍ usa la base de datos
+        return tarifaRepository.findAll();
+    }
 
     public ArrayList<TarifaEntity> obtenerTarifas(){
         return (ArrayList<TarifaEntity>) tarifaRepository.findAll();
@@ -88,21 +121,6 @@ public class TarifaService {
         tarifa.setPrecioConIva(precioConIva);
         
         return tarifa;
-    }
-
-    // Nueva funcionalidad: Obtener todas las tarifas disponibles
-    public List<TarifaEntity> obtenerTarifasDisponibles() {
-        List<TarifaEntity> tarifas = new ArrayList<>();
-        
-        // Generar tarifas para los tipos disponibles (como en el monolítico)
-        int[] vueltasDisponibles = {10, 15, 20};
-        
-        for (int vueltas : vueltasDisponibles) {
-            TarifaEntity tarifa = calcularTarifa(vueltas, 1); // Para 1 persona como base
-            tarifas.add(tarifa);
-        }
-        
-        return tarifas;
     }
 
     // Nueva funcionalidad: Obtener precio base por número de vueltas
