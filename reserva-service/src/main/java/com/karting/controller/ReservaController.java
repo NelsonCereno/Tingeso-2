@@ -16,10 +16,12 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/reservas")
@@ -292,6 +294,27 @@ public class ReservaController {
             return ResponseEntity.ok(reservas);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    // NUEVO: Endpoint para rack-service
+    @GetMapping("/por-fechas")
+    public ResponseEntity<List<ReservaResponse>> obtenerReservasPorFechas(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
+        
+        try {
+            LocalDateTime inicioDateTime = fechaInicio.atStartOfDay();
+            LocalDateTime finDateTime = fechaFin.atTime(23, 59, 59);
+            
+            List<ReservaEntity> reservas = reservaService.findReservasEnRangoFecha(inicioDateTime, finDateTime);
+            List<ReservaResponse> reservasResponse = reservas.stream()
+                .map(ReservaResponse::new)
+                .collect(Collectors.toList());
+            
+            return ResponseEntity.ok(reservasResponse);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 

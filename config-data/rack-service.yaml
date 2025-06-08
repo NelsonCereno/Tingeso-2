@@ -1,0 +1,100 @@
+# filepath: config-data/rack-service.yaml
+server:
+  port: 0
+
+eureka:
+  client:
+    fetch-registry: true
+    register-with-eureka: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+  instance:
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    prefer-ip-address: true
+# ================================
+# CONFIGURACIÓN DE FEIGN CLIENTS
+# ================================
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 10000
+        readTimeout: 15000
+        loggerLevel: BASIC
+        
+      reserva-service:
+        connectTimeout: 8000
+        readTimeout: 12000
+        loggerLevel: FULL
+
+  circuitbreaker:
+    enabled: true
+
+# ================================
+# CONFIGURACIÓN DE CIRCUIT BREAKER
+# ================================
+resilience4j:
+  circuitbreaker:
+    instances:
+      reserva-service:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 10s
+        failureRateThreshold: 50
+
+  retry:
+    instances:
+      reserva-service:
+        maxAttempts: 3
+        waitDuration: 2s
+
+# ================================
+# CONFIGURACIÓN DE LOGGING
+# ================================
+logging:
+  level:
+    com.karting: DEBUG
+    com.karting.client: DEBUG
+    org.springframework.cloud.openfeign: DEBUG
+    feign: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# ================================
+# CONFIGURACIÓN DE ACTUATOR
+# ================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# ================================
+# CONFIGURACIÓN PERSONALIZADA
+# ================================
+karting:
+  rack:
+    # Bloques horarios disponibles
+    bloques-horario:
+      - "09:00-10:00"
+      - "10:00-11:00" 
+      - "11:00-12:00"
+      - "12:00-13:00"
+      - "14:00-15:00"
+      - "15:00-16:00"
+      - "16:00-17:00"
+      - "17:00-18:00"
+      - "18:00-19:00"
+      - "19:00-20:00"
+    
+    # Configuración de cache
+    cache-duration-minutes: 5
+    
+    # Configuración de estadísticas
+    estadisticas-habilitadas: true
