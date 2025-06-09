@@ -3,6 +3,7 @@ package com.karting.controller;
 import com.karting.dto.ReporteIngresosResponse;
 import com.karting.service.ReportsService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -117,6 +118,56 @@ public class ReportsController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("status", "DOWN", "error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Reporte de ingresos por número de vueltas (compatible con frontend)
+     */
+    @GetMapping("/ingresos-por-vueltas")
+    public ResponseEntity<Map<String, Object>> obtenerReporteIngresosPorVueltas(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
+        
+        try {
+            System.out.println("📊 Generando reporte por vueltas desde " + fechaInicio + " hasta " + fechaFin);
+            
+            // ✅ LLAMAR AL MÉTODO DEL SERVICE
+            Map<String, Object> reporte = reportsService.generarReporteIngresosPorVueltas(fechaInicio, fechaFin);
+            
+            System.out.println("✅ Reporte por vueltas generado exitosamente");
+            return ResponseEntity.ok(reporte);
+            
+        } catch (Exception e) {
+            System.err.println("❌ Error en reporte por vueltas: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Error interno del servidor", "mensaje", e.getMessage()));
+        }
+    }
+
+    /**
+     * Reporte de ingresos por número de personas (compatible con frontend)
+     */
+    @GetMapping("/ingresos-por-personas")
+    public ResponseEntity<Map<String, Object>> obtenerReporteIngresosPorPersonas(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
+        
+        try {
+            System.out.println("📊 Generando reporte por personas desde " + fechaInicio + " hasta " + fechaFin);
+            
+            // ✅ LLAMAR AL MÉTODO DEL SERVICE
+            Map<String, Object> reporte = reportsService.generarReporteIngresosPorPersonas(fechaInicio, fechaFin);
+            
+            System.out.println("✅ Reporte por personas generado exitosamente");
+            return ResponseEntity.ok(reporte);
+            
+        } catch (Exception e) {
+            System.err.println("❌ Error en reporte por personas: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Error interno del servidor", "mensaje", e.getMessage()));
         }
     }
 }

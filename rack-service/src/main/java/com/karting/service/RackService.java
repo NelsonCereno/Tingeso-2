@@ -25,7 +25,29 @@ public class RackService {
 
     // ✅ AGREGAR: Método para obtener los bloques como lista
     private List<String> getBloquesHorario() {
-        return Arrays.asList(bloquesHorarioString.split(","));
+        return Arrays.stream(bloquesHorarioString.split(","))
+            .map(String::trim)
+            .sorted(this::compararBloques) // ✅ Ordenar cronológicamente
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * ✅ NUEVO: Comparador para ordenar bloques horarios cronológicamente
+     */
+    private int compararBloques(String bloque1, String bloque2) {
+        try {
+            // Extraer hora de inicio de cada bloque
+            String horaInicio1 = bloque1.split("-")[0].trim();
+            String horaInicio2 = bloque2.split("-")[0].trim();
+            
+            LocalTime hora1 = LocalTime.parse(horaInicio1);
+            LocalTime hora2 = LocalTime.parse(horaInicio2);
+            
+            return hora1.compareTo(hora2);
+        } catch (Exception e) {
+            // En caso de error, usar comparación alfabética como fallback
+            return bloque1.compareTo(bloque2);
+        }
     }
 
     /**
@@ -171,15 +193,15 @@ public class RackService {
      * Procesar reservas y organizarlas en rack semanal
      */
     private RackSemanalResponse procesarRackSemanal(List<ReservaDto> reservas, LocalDate fechaInicio, LocalDate fechaFin) {
-        Map<String, Map<String, List<ReservaDto>>> rackSemanal = new HashMap<>();
+        Map<String, Map<String, List<ReservaDto>>> rackSemanal = new LinkedHashMap<>(); // ✅ Usar LinkedHashMap para mantener orden
 
         // Inicializar estructura del rack
         String[] diasSemana = {"Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"};
-        List<String> bloquesHorario = getBloquesHorario(); // ✅ USAR método
+        List<String> bloquesHorario = getBloquesHorario(); // ✅ Ya ordenados cronológicamente
 
         // Inicializar días y bloques vacíos
         for (String dia : diasSemana) {
-            rackSemanal.put(dia, new HashMap<>());
+            rackSemanal.put(dia, new LinkedHashMap<>()); // ✅ Usar LinkedHashMap para mantener orden
             for (String bloque : bloquesHorario) {
                 rackSemanal.get(dia).put(bloque, new ArrayList<>());
             }
@@ -197,7 +219,7 @@ public class RackService {
                 }
 
                 String dia = obtenerDiaSemana(reserva.getFechaHora().toLocalDate());
-                
+
                 // Asignar reserva a todos los bloques que ocupa
                 for (String bloque : bloquesHorario) {
                     if (reservaOcupaBloque(reserva, bloque)) {

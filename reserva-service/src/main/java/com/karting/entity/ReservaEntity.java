@@ -12,11 +12,18 @@ public class ReservaEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
+    // ✅ CAMPO OBLIGATORIO para las queries
     @Column(name = "fecha_hora", nullable = false)
     private LocalDateTime fechaHora;
     
-    @Column(name = "duracion_minutos", nullable = false)
+    // ✅ CAMPO OBLIGATORIO para reportes
+    @Column(name = "duracion_minutos")
     private Integer duracionMinutos;
+    
+    // ✅ ENUM para el estado
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado")
+    private EstadoReserva estado;
     
     @Column(name = "numero_personas", nullable = false)
     private Integer numeroPersonas;
@@ -38,10 +45,6 @@ public class ReservaEntity {
     
     @Column(name = "precio_total", nullable = false)
     private Double precioTotal;
-    
-    @Column(name = "estado", nullable = false)
-    @Enumerated(EnumType.STRING)
-    private EstadoReserva estado;
     
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;

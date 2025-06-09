@@ -27,4 +27,11 @@ public interface ReservaClient {
     // Health check
     @GetMapping("/health")
     ResponseEntity<String> healthCheck();
+
+    // ✅ CORREGIR: Usar ReservaDto en lugar de ReservaResponse
+    @GetMapping("/entre-fechas")
+    List<ReservaDto> obtenerReservasEntreFechas(
+            @RequestParam("fechaInicio") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam("fechaFin") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin
+    );
 }

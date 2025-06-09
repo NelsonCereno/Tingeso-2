@@ -155,4 +155,8 @@ public interface KartRepository extends JpaRepository<KartEntity, Long> {
            "AND k.ultimaReserva BETWEEN :fechaInicio AND :fechaFin")
     Object[] findUtilizacionPorPeriodo(@Param("fechaInicio") LocalDateTime fechaInicio, 
                                       @Param("fechaFin") LocalDateTime fechaFin);
+
+    // Si findAllById no funciona, agregar este método:
+    @Query("SELECT k FROM KartEntity k WHERE k.id IN :ids")
+    List<KartEntity> findKartsByIds(@Param("ids") List<Long> ids);
 }

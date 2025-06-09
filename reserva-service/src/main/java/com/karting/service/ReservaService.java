@@ -801,4 +801,34 @@ public class ReservaService {
             throw new RuntimeException("Error al buscar reservas: " + e.getMessage(), e);
         }
     }
+
+    // Agregar este método:
+
+    public List<ReservaResponse> obtenerReservasEntreFechas(LocalDate fechaInicio, LocalDate fechaFin) {
+        LocalDateTime inicioDateTime = fechaInicio.atStartOfDay();
+        LocalDateTime finDateTime = fechaFin.atTime(23, 59, 59);
+        
+        System.out.println("🔍 Buscando reservas entre " + inicioDateTime + " y " + finDateTime);
+        
+        try {
+            // ✅ USAR EL MÉTODO CORRECTO (elige una de estas opciones):
+            
+            // OPCIÓN 1: Usar findByFechaHoraBetween (si Spring Data lo genera automáticamente)
+            // List<ReservaEntity> reservas = reservaRepository.findByFechaHoraBetween(inicioDateTime, finDateTime);
+            
+            // OPCIÓN 2: Si la opción 1 no funciona, usar la query personalizada
+            List<ReservaEntity> reservas = reservaRepository.findReservasEntreFechas(inicioDateTime, finDateTime);
+            
+            System.out.println("✅ Encontradas " + reservas.size() + " reservas en el período");
+            
+            return reservas.stream()
+                .map(ReservaResponse::new)
+                .collect(Collectors.toList());
+                
+        } catch (Exception e) {
+            System.err.println("❌ Error al buscar reservas entre fechas: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Error al obtener reservas del período", e);
+        }
+    }
 }

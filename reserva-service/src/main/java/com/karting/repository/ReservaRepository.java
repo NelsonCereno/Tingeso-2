@@ -5,16 +5,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
 public interface ReservaRepository extends JpaRepository<ReservaEntity, Long> {
-    
-    // Buscar reservas por estado
-    List<ReservaEntity> findByEstado(ReservaEntity.EstadoReserva estado);
-    
+
     // Buscar reservas activas (no canceladas ni completadas)
     @Query("SELECT r FROM ReservaEntity r WHERE r.estado NOT IN ('CANCELADA', 'COMPLETADA')")
     List<ReservaEntity> findReservasActivas();
@@ -107,4 +103,19 @@ public interface ReservaRepository extends JpaRepository<ReservaEntity, Long> {
     @Query("SELECT SUM(r.precioTotal) FROM ReservaEntity r WHERE r.estado = 'COMPLETADA' AND r.fechaHora BETWEEN :fechaInicio AND :fechaFin")
     Double findTotalIngresosEnRango(@Param("fechaInicio") LocalDateTime fechaInicio,
                                    @Param("fechaFin") LocalDateTime fechaFin);
+
+    // ✅ MÉTODO PRINCIPAL: Buscar reservas entre fechas
+    @Query("SELECT r FROM ReservaEntity r WHERE r.fechaHora >= :fechaInicio AND r.fechaHora <= :fechaFin ORDER BY r.fechaHora ASC")
+    List<ReservaEntity> findReservasEntreFechas(
+            @Param("fechaInicio") LocalDateTime fechaInicio, 
+            @Param("fechaFin") LocalDateTime fechaFin
+    );
+
+    // ✅ MÉTODO CON ESTADO Y ORDENADO (REEMPLAZA AL DUPLICADO)
+    @Query("SELECT r FROM ReservaEntity r WHERE r.estado = :estado ORDER BY r.fechaHora ASC")
+    List<ReservaEntity> findByEstado(@Param("estado") ReservaEntity.EstadoReserva estado);
+
+    // ✅ MÉTODOS ADICIONALES
+    @Query("SELECT r FROM ReservaEntity r WHERE r.fechaHora >= :fecha ORDER BY r.fechaHora ASC")
+    List<ReservaEntity> findReservasFuturas(@Param("fecha") LocalDateTime fecha);
 }

@@ -22,9 +22,21 @@ const RackSemanal = () => {
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [loading, setLoading] = useState(false);
   const [currentWeekDates, setCurrentWeekDates] = useState([]);
+  const [bloquesHorario, setBloquesHorario] = useState([]);
 
   const diasSemana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
-  const bloquesHorario = ["09:00-10:00", "10:00-11:00", "11:00-12:00", "12:00-13:00", "14:00-15:00", "15:00-16:00", "16:00-17:00"];
+
+  const ordenarBloques = (bloques) => {
+    return bloques.sort((a, b) => {
+      try {
+        const horaA = a.split('-')[0];
+        const horaB = b.split('-')[0];
+        return horaA.localeCompare(horaB);
+      } catch (error) {
+        return 0;
+      }
+    });
+  };
 
   useEffect(() => {
     loadRackSemanal(selectedDate);
@@ -33,12 +45,10 @@ const RackSemanal = () => {
   const loadRackSemanal = (date) => {
     setLoading(true);
     
-    // Calcular fechas de inicio y fin de la semana seleccionada
     const dateObj = parseISO(date);
-    const start = startOfWeek(dateObj, { weekStartsOn: 1 }); // Lunes como primer día
+    const start = startOfWeek(dateObj, { weekStartsOn: 1 });
     const end = endOfWeek(dateObj, { weekStartsOn: 1 });
     
-    // Generar array de fechas para mostrar en el encabezado
     const weekDates = [];
     for (let i = 0; i < 7; i++) {
       const currentDate = addDays(start, i);
@@ -46,15 +56,25 @@ const RackSemanal = () => {
     }
     setCurrentWeekDates(weekDates);
     
-    // Formatear fechas para el backend
     const startFormatted = format(start, 'yyyy-MM-dd');
     const endFormatted = format(end, 'yyyy-MM-dd');
     
-    // Si el backend aún no soporta filtrado por fechas, simplemente llamamos al endpoint existente
-    // y luego podemos filtrar los resultados en el frontend si es necesario
     reservaService.getRackSemanal(startFormatted, endFormatted)
       .then((response) => {
         setRackSemanal(response.data);
+        
+        const bloquesUnicos = new Set();
+        Object.values(response.data).forEach(dia => {
+          if (dia && typeof dia === 'object') {
+            Object.keys(dia).forEach(bloque => {
+              bloquesUnicos.add(bloque);
+            });
+          }
+        });
+        
+        const bloquesOrdenados = ordenarBloques(Array.from(bloquesUnicos));
+        setBloquesHorario(bloquesOrdenados);
+        
         setLoading(false);
       })
       .catch(error => {

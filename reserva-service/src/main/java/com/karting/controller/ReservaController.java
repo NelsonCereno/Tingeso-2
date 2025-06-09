@@ -2,6 +2,7 @@ package com.karting.controller;
 
 import com.karting.client.ClienteClient;
 import com.karting.dto.CalculoPrecioResponse;
+import com.karting.dto.ReservaDto;
 import com.karting.dto.ReservaRequest;
 import com.karting.dto.ReservaResponse;
 import com.karting.entity.ReservaEntity;
@@ -324,6 +325,32 @@ public class ReservaController {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ArrayList<>());
+        }
+    }
+
+    // Agregar después de la línea 150:
+
+    @GetMapping("/entre-fechas")
+    public ResponseEntity<List<ReservaDto>> obtenerReservasEntreFechas(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
+        
+        try {
+            System.out.println("📊 Obteniendo reservas entre " + fechaInicio + " y " + fechaFin + " para reports-service");
+            
+            List<ReservaResponse> reservas = reservaService.obtenerReservasEntreFechas(fechaInicio, fechaFin);
+            
+            // ✅ CONVERTIR ReservaResponse a ReservaDto
+            List<ReservaDto> reservasDto = reservas.stream()
+                .map(this::convertirAReservaDto)
+                .collect(Collectors.toList());
+            
+            System.out.println("✅ Encontradas " + reservasDto.size() + " reservas convertidas a DTO");
+            return ResponseEntity.ok(reservasDto);
+            
+        } catch (Exception e) {
+            System.err.println("❌ Error al obtener reservas entre fechas: " + e.getMessage());
+            return ResponseEntity.internalServerError().build();
         }
     }
 
@@ -719,5 +746,27 @@ public class ReservaController {
         }
         
         return emails;
+    }
+
+    // ✅ MÉTODO HELPER: Convertir ReservaResponse a ReservaDto
+    private ReservaDto convertirAReservaDto(ReservaResponse reservaResponse) {
+        ReservaDto dto = new ReservaDto();
+        dto.setId(reservaResponse.getId());
+        dto.setFechaHora(reservaResponse.getFechaHora());
+        dto.setDuracionMinutos(reservaResponse.getDuracionMinutos());
+        dto.setNumeroPersonas(reservaResponse.getNumeroPersonas());
+        dto.setClientesIds(reservaResponse.getClientesIds());
+        dto.setKartsIds(reservaResponse.getKartsIds());
+        dto.setPrecioBase(reservaResponse.getPrecioBase());
+        dto.setDescuentoPersonas(reservaResponse.getDescuentoPersonas());
+        dto.setDescuentoClientes(reservaResponse.getDescuentoClientes());
+        dto.setDescuentoCumpleanos(reservaResponse.getDescuentoCumpleanos());
+        dto.setDescuentoTotal(reservaResponse.getDescuentoTotal());
+        dto.setPrecioTotal(reservaResponse.getPrecioTotal());
+        dto.setEstado(reservaResponse.getEstado() != null ? reservaResponse.getEstado().toString() : "PENDIENTE");
+        dto.setObservaciones(reservaResponse.getObservaciones());
+        dto.setFechaCreacion(reservaResponse.getFechaCreacion());
+        dto.setFechaActualizacion(reservaResponse.getFechaActualizacion());
+        return dto;
     }
 }

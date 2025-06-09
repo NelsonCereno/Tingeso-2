@@ -397,4 +397,28 @@ public class KartController {
         }
         return ResponseEntity.ok(karts);
     }
+    
+    // ✅ AGREGAR: Obtener múltiples karts por IDs (para el frontend)
+    @PostMapping("/obtener-multiples")
+    public ResponseEntity<List<KartResponse>> obtenerKartsPorIds(@RequestBody List<Long> kartsIds) {
+        try {
+            if (kartsIds == null || kartsIds.isEmpty()) {
+                return ResponseEntity.badRequest().build();
+            }
+            
+            System.out.println("📥 Obteniendo karts por IDs: " + kartsIds);
+            
+            List<KartResponse> karts = kartService.obtenerKartsPorIds(kartsIds);
+            
+            System.out.println("✅ Enviando " + karts.size() + " karts al frontend");
+            
+            if (karts.isEmpty()) {
+                return ResponseEntity.noContent().build();
+            }
+            return ResponseEntity.ok(karts);
+        } catch (Exception e) {
+            System.err.println("❌ Error al obtener karts por IDs: " + e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
 }

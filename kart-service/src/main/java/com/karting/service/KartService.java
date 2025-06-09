@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -180,7 +181,7 @@ public class KartService {
     
     // Liberar karts después del uso
     public List<KartResponse> liberarKarts(List<Long> kartsIds) {
-        List<KartEntity> karts = kartRepository.findAllById(kartsIds);
+        List<KartEntity> karts = kartRepository.findKartsByIds(kartsIds);
         
         karts.forEach(kart -> {
             kart.liberar();
@@ -409,5 +410,22 @@ public class KartService {
 
         public Integer getMinUsos() { return minUsos; }
         public void setMinUsos(Integer minUsos) { this.minUsos = minUsos; }
+    }
+    
+    // ✅ AGREGAR: Obtener múltiples karts por IDs
+    public List<KartResponse> obtenerKartsPorIds(List<Long> kartsIds) {
+        if (kartsIds == null || kartsIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        List<KartEntity> karts = kartRepository.findAllById(kartsIds);
+        
+        // Log para debug
+        System.out.println("🔍 Buscando karts con IDs: " + kartsIds);
+        System.out.println("📦 Encontrados: " + karts.size() + " karts");
+        
+        return karts.stream()
+                .map(KartResponse::new)
+                .collect(Collectors.toList());
     }
 }

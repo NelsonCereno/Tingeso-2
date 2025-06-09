@@ -7,9 +7,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.TextStyle;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.ArrayList;
 
 @Service
 public class ReportsService {
@@ -304,5 +307,223 @@ public class ReportsService {
         String[] meses = {"", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
                          "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"};
         return meses[mes];
+    }
+
+    /**
+     * Genera reporte de ingresos agrupados por número de vueltas
+     */
+    public Map<String, Object> generarReporteIngresosPorVueltas(LocalDate fechaInicio, LocalDate fechaFin) {
+        System.out.println("🔍 Generando reporte por vueltas desde " + fechaInicio + " hasta " + fechaFin);
+        
+        try {
+            // ✅ OBTENER RESERVAS DEL PERÍODO usando ReservaDto
+            List<ReservaDto> reservas = obtenerReservasDelMes(fechaInicio, fechaFin);
+            
+            if (reservas == null || reservas.isEmpty()) {
+                System.out.println("⚠️ No se encontraron reservas para el período especificado");
+                return Map.of(
+                    "ingresosTotales", 0.0,
+                    "totalReservas", 0,
+                    "totalVueltas", 0,
+                    "promedioIngresosPorReserva", 0.0,
+                    "detallesPorVueltas", List.of(),
+                    "mensaje", "No hay datos para el período seleccionado"
+                );
+            }
+            
+            // ✅ AGRUPAR POR VUELTAS (simular vueltas basado en duración)
+            Map<Integer, List<ReservaDto>> reservasPorVueltas = reservas.stream()
+                .filter(r -> r.getDuracionMinutos() != null && r.getDuracionMinutos() > 0)
+                .collect(Collectors.groupingBy(this::calcularVueltasAproximadas));
+            
+            // ✅ CALCULAR ESTADÍSTICAS POR VUELTAS
+            List<Map<String, Object>> detallesPorVueltas = reservasPorVueltas.entrySet().stream()
+                .map(entry -> {
+                    Integer numeroVueltas = entry.getKey();
+                    List<ReservaDto> reservasVueltas = entry.getValue();
+                    
+                    double ingresosTotales = reservasVueltas.stream()
+                        .mapToDouble(r -> r.getPrecioTotal() != null ? r.getPrecioTotal() : 0.0)
+                        .sum();
+                    
+                    int cantidadReservas = reservasVueltas.size();
+                    double promedioIngresos = cantidadReservas > 0 ? ingresosTotales / cantidadReservas : 0.0;
+                    
+                    // Usar HashMap para crear el mapa mutable
+                    Map<String, Object> detalle = new HashMap<>();
+                    detalle.put("numeroVueltas", numeroVueltas);
+                    detalle.put("cantidadReservas", cantidadReservas);
+                    detalle.put("ingresosTotales", ingresosTotales);
+                    detalle.put("promedioIngresos", promedioIngresos);
+                    return detalle;
+                })
+                .sorted((a, b) -> Integer.compare((Integer) a.get("numeroVueltas"), (Integer) b.get("numeroVueltas")))
+                .collect(Collectors.toList());
+            
+            // ✅ CALCULAR TOTALES
+            double ingresosTotales = reservas.stream()
+                .mapToDouble(r -> r.getPrecioTotal() != null ? r.getPrecioTotal() : 0.0)
+                .sum();
+            
+            int totalReservas = reservas.size();
+            Integer totalVueltas = reservas.stream()
+                .mapToInt(this::calcularVueltasAproximadas)
+                .sum();
+            
+            Double promedioIngresosPorReserva = totalReservas > 0 ? ingresosTotales / totalReservas : 0.0;
+            
+            System.out.println("✅ Reporte por vueltas generado - Total reservas: " + totalReservas + ", Ingresos: $" + ingresosTotales);
+            
+            Map<String, Object> resultado = new HashMap<>();
+            resultado.put("ingresosTotales", ingresosTotales);
+            resultado.put("totalReservas", totalReservas);
+            resultado.put("totalVueltas", totalVueltas);
+            resultado.put("promedioIngresosPorReserva", promedioIngresosPorReserva);
+            resultado.put("detallesPorVueltas", detallesPorVueltas);
+            resultado.put("fechaInicio", fechaInicio.toString());
+            resultado.put("fechaFin", fechaFin.toString());
+            resultado.put("fechaGeneracion", LocalDateTime.now().toString());
+            return resultado;
+            
+        } catch (Exception e) {
+            System.err.println("❌ Error al generar reporte por vueltas: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Error al generar reporte por vueltas", e);
+        }
+    }
+
+    /**
+     * Genera reporte de ingresos agrupados por número de personas
+     */
+    public Map<String, Object> generarReporteIngresosPorPersonas(LocalDate fechaInicio, LocalDate fechaFin) {
+        System.out.println("🔍 Generando reporte por personas desde " + fechaInicio + " hasta " + fechaFin);
+        
+        try {
+            // ✅ OBTENER RESERVAS DEL PERÍODO usando ReservaDto
+            List<ReservaDto> reservas = obtenerReservasDelMes(fechaInicio, fechaFin);
+            
+            if (reservas == null || reservas.isEmpty()) {
+                System.out.println("⚠️ No se encontraron reservas para el período especificado");
+                return Map.of(
+                    "ingresosTotales", 0.0,
+                    "totalReservas", 0,
+                    "totalPersonas", 0,
+                    "promedioIngresosPorPersona", 0.0,
+                    "detallesPorPersonas", List.of(),
+                    "mensaje", "No hay datos para el período seleccionado"
+                );
+            }
+            
+            // ✅ CATEGORIZAR POR NÚMERO DE PERSONAS
+            Map<String, List<ReservaDto>> reservasPorCategoria = reservas.stream()
+                .filter(r -> r.getNumeroPersonas() != null && r.getNumeroPersonas() > 0)
+                .collect(Collectors.groupingBy(this::categorizarPorPersonas));
+            
+            // ✅ CALCULAR ESTADÍSTICAS POR CATEGORÍA
+            List<Map<String, Object>> detallesPorPersonas = reservasPorCategoria.entrySet().stream()
+                .map(entry -> {
+                    String categoriaPersonas = entry.getKey();
+                    List<ReservaDto> reservasCategoria = entry.getValue();
+                    
+                    double ingresosTotales = reservasCategoria.stream()
+                        .mapToDouble(r -> r.getPrecioTotal() != null ? r.getPrecioTotal() : 0.0)
+                        .sum();
+                    
+                    int cantidadReservas = reservasCategoria.size();
+                    int totalPersonas = reservasCategoria.stream()
+                        .mapToInt(r -> r.getNumeroPersonas() != null ? r.getNumeroPersonas() : 0)
+                        .sum();
+                    
+                    double promedioIngresos = cantidadReservas > 0 ? ingresosTotales / cantidadReservas : 0.0;
+                    
+                    // Usar HashMap para crear el mapa mutable
+                    Map<String, Object> detalle = new HashMap<>();
+                    detalle.put("categoriaPersonas", categoriaPersonas);
+                    detalle.put("cantidadReservas", cantidadReservas);
+                    detalle.put("totalPersonas", totalPersonas);
+                    detalle.put("ingresosTotales", ingresosTotales);
+                    detalle.put("promedioIngresos", promedioIngresos);
+                    return detalle;
+                })
+                .sorted((a, b) -> Integer.compare(
+                    getOrdenCategoria((String) a.get("categoriaPersonas")),
+                    getOrdenCategoria((String) b.get("categoriaPersonas"))
+                ))
+                .collect(Collectors.toList());
+            
+            // ✅ CALCULAR TOTALES
+            double ingresosTotales = reservas.stream()
+                .mapToDouble(r -> r.getPrecioTotal() != null ? r.getPrecioTotal() : 0.0)
+                .sum();
+            
+            int totalReservas = reservas.size();
+            int totalPersonas = reservas.stream()
+                .mapToInt(r -> r.getNumeroPersonas() != null ? r.getNumeroPersonas() : 0)
+                .sum();
+            
+            double promedioIngresosPorPersona = totalPersonas > 0 ? ingresosTotales / totalPersonas : 0.0;
+            
+            System.out.println("✅ Reporte por personas generado - Total reservas: " + totalReservas + ", Total personas: " + totalPersonas);
+            
+            Map<String, Object> resultado = new HashMap<>();
+            resultado.put("ingresosTotales", ingresosTotales);
+            resultado.put("totalReservas", totalReservas);
+            resultado.put("totalPersonas", totalPersonas);
+            resultado.put("promedioIngresosPorPersona", promedioIngresosPorPersona);
+            resultado.put("detallesPorPersonas", detallesPorPersonas);
+            resultado.put("fechaInicio", fechaInicio.toString());
+            resultado.put("fechaFin", fechaFin.toString());
+            resultado.put("fechaGeneracion", LocalDateTime.now().toString());
+            return resultado;
+            
+        } catch (Exception e) {
+            System.err.println("❌ Error al generar reporte por personas: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Error al generar reporte por personas", e);
+        }
+    }
+
+    /**
+     * Categoriza las reservas por número de personas (usando ReservaDto)
+     */
+    private String categorizarPorPersonas(ReservaDto reserva) {
+        int numeroPersonas = reserva.getNumeroPersonas() != null ? reserva.getNumeroPersonas() : 0;
+        
+        if (numeroPersonas <= 2) {
+            return "1-2 personas";
+        } else if (numeroPersonas <= 5) {
+            return "3-5 personas";
+        } else if (numeroPersonas <= 10) {
+            return "6-10 personas";
+        } else {
+            return "11-15 personas";
+        }
+    }
+
+    /**
+     * Orden para las categorías de personas
+     */
+    private int getOrdenCategoria(String categoria) {
+        switch (categoria) {
+            case "1-2 personas": return 1;
+            case "3-5 personas": return 2;
+            case "6-10 personas": return 3;
+            case "11-15 personas": return 4;
+            default: return 5;
+        }
+    }
+
+    /**
+     * Calcula vueltas aproximadas basado en duración
+     */
+    private int calcularVueltasAproximadas(ReservaDto reserva) {
+        Integer duracion = reserva.getDuracionMinutos();
+        if (duracion == null || duracion <= 0) {
+            return 0;
+        }
+        
+        // Asumir que cada vuelta toma aproximadamente 2-3 minutos
+        // Esto es solo una estimación
+        return Math.max(1, duracion / 3);
     }
 }
