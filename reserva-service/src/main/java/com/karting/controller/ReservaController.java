@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/reservas")
-@CrossOrigin("*")
+
 public class ReservaController {
 
     @Autowired

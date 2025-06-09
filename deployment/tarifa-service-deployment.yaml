@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ms-client-deployment
+  labels:
+    app: ms-client-deployment
+spec:
+  selector:
+    matchLabels:
+      app: ms-client-deployment
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ms-client-deployment
+    spec:
+      containers:
+        - name: clientms
+          image: ovejazo/clientms
+          ports:
+            - containerPort: 8090

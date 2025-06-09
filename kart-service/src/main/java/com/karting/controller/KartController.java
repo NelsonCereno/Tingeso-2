@@ -12,7 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/karts")
-@CrossOrigin("*")
+
 public class KartController {
 
     @Autowired

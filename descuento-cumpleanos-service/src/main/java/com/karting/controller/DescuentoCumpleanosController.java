@@ -15,7 +15,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/descuentos/cumpleanos")
-@CrossOrigin("*")
+
 public class DescuentoCumpleanosController {
 
     @Autowired

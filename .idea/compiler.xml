@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="eureka-service" />
+        <module name="descuento-cumpleanos-service (4)" />
+        <module name="tarifa-service" />
+        <module name="descuento-cumpleanos-service (5)" />
+        <module name="descuento-cumpleanos-service (2)" />
+        <module name="config-service" />
+        <module name="descuento-cumpleanos-service (3)" />
+        <module name="descuento-cumpleanos-service" />
+        <module name="descuento-cumpleanos-service (1)" />
+        <module name="gateway-service" />
+        <module name="student-service" />
+        <module name="descuento-personas-service" />
+      </profile>
+    </annotationProcessing>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="config-service" options="-parameters" />
+      <module name="descuento-cumpleanos-service" options="-parameters" />
+      <module name="descuento-cumpleanos-service (1)" options="-parameters" />
+      <module name="descuento-cumpleanos-service (2)" options="-parameters" />
+      <module name="descuento-cumpleanos-service (3)" options="-parameters" />
+      <module name="descuento-cumpleanos-service (4)" options="-parameters" />
+      <module name="descuento-cumpleanos-service (5)" options="-parameters" />
+      <module name="descuento-personas-service" options="-parameters" />
+      <module name="eureka-service" options="-parameters" />
+      <module name="gateway-service" options="-parameters" />
+      <module name="student-service" options="-parameters" />
+      <module name="tarifa-service" options="-parameters" />
+    </option>
+  </component>
+</project>
