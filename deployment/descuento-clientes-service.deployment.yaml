@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: descuento-clientes-service-deployment
+  labels:
+    app: descuento-clientes-service-deployment
+spec:
+  selector:
+    matchLabels:
+      app: descuento-clientes-service-deployment
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: descuento-clientes-service-deployment
+    spec:
+      containers:
+        - name: descuento-clientes-service
+          image: nelsoncereno/descuento-clientes-service
+          ports:
+            - containerPort: 8093

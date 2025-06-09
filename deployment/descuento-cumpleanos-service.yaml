@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: descuento-cumpleanos-service-deployment
+  labels:
+    app: descuento-cumpleanos-service-deployment
+spec:
+  selector:
+    matchLabels:
+      app: descuento-cumpleanos-service-deployment
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: descuento-cumpleanos-service-deployment
+    spec:
+      containers:
+        - name: descuento-cumpleanos-service
+          image: nelsoncereno/descuento-cumpleanos-service
+          ports:
+            - containerPort: 8094

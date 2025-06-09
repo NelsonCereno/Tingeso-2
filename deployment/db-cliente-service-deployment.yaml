@@ -1,0 +1,85 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: clientes-pv
+  labels:
+    type: local
+spec:
+  storageClassName: standard
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/data/clientes-data"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: clientes-pvc
+  labels:
+    app: postgres
+    tier: database
+spec:
+  storageClassName: standard
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clientes-deployment
+  labels:
+    app: clientes-deployment
+    tier: database
+spec:
+  selector:
+    matchLabels:
+      app: clientes-deployment
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: clientes-deployment
+        tier: database
+    spec:
+      containers:
+        - name: clientes
+          image: postgres
+          imagePullPolicy: "IfNotPresent"
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: DB_PASSWORD
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: clientes-data
+      volumes:
+        - name: clientes-data
+          persistentVolumeClaim:
+            claimName: clientes-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: clientes-service
+  labels:
+    app: clientes-service
+    tier: database
+spec:
+  ports:
+    - port: 5435
+      targetPort: 5432
+      protocol: TCP
+  selector:
+    app: clientes-deployment
+    tier: database
+  type: LoadBalancer

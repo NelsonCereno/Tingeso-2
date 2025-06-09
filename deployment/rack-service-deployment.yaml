@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rack-service-deployment
+  labels:
+    app: rack-service-deployment
+spec:
+  selector:
+    matchLabels:
+      app: rack-service-deployment
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: rack-service-deployment
+    spec:
+      containers:
+        - name: rack-service
+          image: nelsoncereno/rack-service
+          ports:
+            - containerPort: 8096

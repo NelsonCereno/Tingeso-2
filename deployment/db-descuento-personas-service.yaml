@@ -1,0 +1,85 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: descuentopersonas-pv
+  labels:
+    type: local
+spec:
+  storageClassName: standard
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/data/descuentopersonas-data"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: descuentopersonas-pvc
+  labels:
+    app: postgres
+    tier: database
+spec:
+  storageClassName: standard
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: descuentopersonas-deployment
+  labels:
+    app: descuentopersonas-deployment
+    tier: database
+spec:
+  selector:
+    matchLabels:
+      app: descuentopersonas-deployment
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: descuentopersonas-deployment
+        tier: database
+    spec:
+      containers:
+        - name: descuentopersonas
+          image: postgres
+          imagePullPolicy: "IfNotPresent"
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: DB_PASSWORD
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: descuentopersonas-data
+      volumes:
+        - name: descuentopersonas-data
+          persistentVolumeClaim:
+            claimName: descuentopersonas-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: descuentopersonas-service
+  labels:
+    app: descuentopersonas-service
+    tier: database
+spec:
+  ports:
+    - port: 5438
+      targetPort: 5432
+      protocol: TCP
+  selector:
+    app: descuentopersonas-deployment
+    tier: database
+  type: LoadBalancer

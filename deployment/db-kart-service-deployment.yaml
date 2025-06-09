@@ -1,0 +1,85 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: karts-pv
+  labels:
+    type: local
+spec:
+  storageClassName: standard
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/data/karts-data"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: karts-pvc
+  labels:
+    app: postgres
+    tier: database
+spec:
+  storageClassName: standard
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: karts-deployment
+  labels:
+    app: karts-deployment
+    tier: database
+spec:
+  selector:
+    matchLabels:
+      app: karts-deployment
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: karts-deployment
+        tier: database
+    spec:
+      containers:
+        - name: karts
+          image: postgres
+          imagePullPolicy: "IfNotPresent"
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: DB_PASSWORD
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: karts-data
+      volumes:
+        - name: karts-data
+          persistentVolumeClaim:
+            claimName: karts-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: karts-service
+  labels:
+    app: karts-service
+    tier: database
+spec:
+  ports:
+    - port: 5434
+      targetPort: 5432
+      protocol: TCP
+  selector:
+    app: karts-deployment
+    tier: database
+  type: LoadBalancer

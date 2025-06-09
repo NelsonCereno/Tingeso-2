@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reports-service-deployment
+  labels:
+    app: reports-service-deployment
+spec:
+  selector:
+    matchLabels:
+      app: reports-service-deployment
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: reports-service-deployment
+    spec:
+      containers:
+        - name: reports-service
+          image: nelsoncereno/reports-service
+          ports:
+            - containerPort: 8097

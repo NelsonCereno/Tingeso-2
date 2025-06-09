@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: descuento-personas-service-deployment
+  labels:
+    app: descuento-personas-service-deployment
+spec:
+  selector:
+    matchLabels:
+      app: descuento-personas-service-deployment
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: descuento-personas-service-deployment
+    spec:
+      containers:
+        - name: descuento-personas-service
+          image: nelsoncereno/descuento-personas-service
+          ports:
+            - containerPort: 8098

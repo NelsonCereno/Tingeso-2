@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kart-service-deployment
+  labels:
+    app: kart-service-deployment
+spec:
+  selector:
+    matchLabels:
+      app: kart-service-deployment
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: kart-service-deployment
+    spec:
+      containers:
+        - name: kart-service
+          image: nelsoncereno/kart-service
+          ports:
+            - containerPort: 8095

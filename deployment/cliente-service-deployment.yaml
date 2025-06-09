@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cliente-service-deployment
+  labels:
+    app: cliente-service-deployment
+spec:
+  selector:
+    matchLabels:
+      app: cliente-service-deployment
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: cliente-service-deployment
+    spec:
+      containers:
+        - name: cliente-service
+          image: nelsoncereno/cliente-service
+          ports:
+            - containerPort: 8092

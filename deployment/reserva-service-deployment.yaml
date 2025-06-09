@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reserva-service-deployment
+  labels:
+    app: reserva-service-deployment
+spec:
+  selector:
+    matchLabels:
+      app: reserva-service-deployment
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: reserva-service-deployment
+    spec:
+      containers:
+        - name: reserva-service
+          image: nelsoncereno/reserva-service
+          ports:
+            - containerPort: 8091
