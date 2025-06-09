@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ms-client-deployment
+  name: tarifa-service-deployment
   labels:
-    app: ms-client-deployment
+    app: tarifa-service-deployment
 spec:
   selector:
     matchLabels:
-      app: ms-client-deployment
+      app: tarifa-service-deployment
   replicas: 1
   template:
     metadata:
       labels:
-        app: ms-client-deployment
+        app: tarifa-service-deployment
     spec:
       containers:
-        - name: clientms
-          image: ovejazo/clientms
+        - name: tarifa-service
+          image: nelsoncereno/tarifa-service
           ports:
             - containerPort: 8090

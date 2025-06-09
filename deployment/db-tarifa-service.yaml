@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: bdclient-pv
+  name: tarifaduracionreservas-pv
   labels:
     type: local
 spec:
@@ -11,12 +11,12 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/data/bdclient-data"
+    path: "/data/tarifaduracionreservas-data"
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: bdclient-pvc
+  name: tarifaduracionreservas-pvc
   labels:
     app: postgres
     tier: database
@@ -31,24 +31,24 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: bdclient-deployment
+  name: tarifaduracionreservas-deployment
   labels:
-    app: bdclient-deployment
+    app: tarifaduracionreservas-deployment
     tier: database
 spec:
   selector:
     matchLabels:
-      app: bdclient-deployment
+      app: tarifaduracionreservas-deployment
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app: bdclient-deployment
+        app: tarifaduracionreservas-deployment
         tier: database
     spec:
       containers:
-        - name: bdclient
+        - name: tarifaduracionreservas
           image: postgres
           imagePullPolicy: "IfNotPresent"
           ports:
@@ -61,18 +61,18 @@ spec:
                   key: DB_PASSWORD
           volumeMounts:
             - mountPath: /var/lib/postgresql/data
-              name: bdclient-data
+              name: tarifaduracionreservas-data
       volumes:
-        - name: bdclient-data
+        - name: tarifaduracionreservas-data
           persistentVolumeClaim:
-            claimName: bdclient-pvc
+            claimName: tarifaduracionreservas-pvc
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: bdclient-service
+  name: tarifaduracionreservas-service
   labels:
-    app: bdclient-service
+    app: tarifaduracionreservas-service
     tier: database
 spec:
   ports:
@@ -80,6 +80,6 @@ spec:
       targetPort: 5432
       protocol: TCP
   selector:
-    app: bdclient-deployment
+    app: tarifaduracionreservas-deployment
     tier: database
   type: LoadBalancer
