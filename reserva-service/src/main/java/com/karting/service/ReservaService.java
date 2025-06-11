@@ -749,11 +749,8 @@ public class ReservaService {
 
     // NUEVO: Calcular descuento individual por cumpleaños
     private Double calcularDescuentoCumpleanosIndividual(Integer numeroPersonas, Double precioBasePorPersona) {
-        // Lógica: 50% de descuento para el cumpleañero
-        if (numeroPersonas >= 3) {
-            return precioBasePorPersona * 0.50; // 50% de descuento
-        }
-        return 0.0;
+        // ✅ CORREGIDO: El descuento por cumpleaños se aplica independiente del número de personas
+        return precioBasePorPersona * 0.50; // 50% de descuento por cumpleaños
     }
 
     // NUEVO: Generar detalle completo del cálculo
