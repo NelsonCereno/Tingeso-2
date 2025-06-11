@@ -14,7 +14,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/rack")
-
+@CrossOrigin(origins = "*")
 public class RackController {
 
     @Autowired
@@ -34,20 +34,21 @@ public class RackController {
             // Si no se proporcionan fechas, mostrar semana actual
             if (fechaInicio == null || fechaFin == null) {
                 LocalDate hoy = LocalDate.now();
-                fechaInicio = hoy.with(DayOfWeek.MONDAY);  // Lunes de esta semana
-                fechaFin = fechaInicio.plusDays(6);        // Domingo de esta semana
-                
+                fechaInicio = hoy.with(DayOfWeek.MONDAY);
+                fechaFin = fechaInicio.plusDays(6);
                 System.out.println("📅 Sin fechas especificadas, usando semana actual: " + fechaInicio + " - " + fechaFin);
-                rackSemanal = rackService.obtenerRackSemanalPorFechas(fechaInicio, fechaFin);
             } else {
                 System.out.println("📅 Fechas especificadas: " + fechaInicio + " - " + fechaFin);
-                rackSemanal = rackService.obtenerRackSemanalPorFechas(fechaInicio, fechaFin);
             }
 
+            rackSemanal = rackService.obtenerRackSemanalPorFechas(fechaInicio, fechaFin);
+            System.out.println("📊 Rack generado con " + rackSemanal.getTotalReservas() + " reservas");
+            
             return ResponseEntity.ok(rackSemanal);
             
         } catch (Exception e) {
             System.err.println("❌ Error en endpoint rack semanal: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -64,6 +65,7 @@ public class RackController {
             Map<String, Object> estadisticas = rackService.obtenerEstadisticasRack(fechaInicio, fechaFin);
             return ResponseEntity.ok(estadisticas);
         } catch (Exception e) {
+            System.err.println("❌ Error al obtener estadísticas: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "Error al obtener estadísticas: " + e.getMessage()));
         }
@@ -82,6 +84,7 @@ public class RackController {
             Map<String, Object> disponibilidad = rackService.verificarDisponibilidadBloque(fecha, bloque, numeroPersonas);
             return ResponseEntity.ok(disponibilidad);
         } catch (Exception e) {
+            System.err.println("❌ Error al verificar disponibilidad: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(Map.of("error", "Error al verificar disponibilidad: " + e.getMessage()));
         }

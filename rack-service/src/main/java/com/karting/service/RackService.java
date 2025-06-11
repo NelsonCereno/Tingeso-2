@@ -7,9 +7,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.DayOfWeek;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -19,24 +20,28 @@ public class RackService {
     @Autowired
     private ReservaClient reservaClient;
 
-    // ✅ CAMBIAR: Usar String en lugar de List
-    @Value("${karting.rack.bloques-horario:09:00-10:00,10:00-11:00,11:00-12:00,12:00-13:00,14:00-15:00,15:00-16:00,16:00-17:00,17:00-18:00,18:00-19:00,19:00-20:00}")
+    // ✅ BLOQUE HORARIO COMPLETO CON 13:00-14:00
+    @Value("${karting.rack.bloques-horario:09:00-10:00,10:00-11:00,11:00-12:00,12:00-13:00,13:00-14:00,14:00-15:00,15:00-16:00,16:00-17:00,17:00-18:00,18:00-19:00,19:00-20:00}")
     private String bloquesHorarioString;
 
-    // ✅ AGREGAR: Método para obtener los bloques como lista
+    /**
+     * Obtener los bloques horarios como lista ordenada
+     */
     private List<String> getBloquesHorario() {
-        return Arrays.stream(bloquesHorarioString.split(","))
+        List<String> bloques = Arrays.stream(bloquesHorarioString.split(","))
             .map(String::trim)
-            .sorted(this::compararBloques) // ✅ Ordenar cronológicamente
+            .sorted(this::compararBloques)
             .collect(Collectors.toList());
+            
+        System.out.println("🕐 Bloques horarios configurados: " + bloques);
+        return bloques;
     }
 
     /**
-     * ✅ NUEVO: Comparador para ordenar bloques horarios cronológicamente
+     * Comparador para ordenar bloques horarios cronológicamente
      */
     private int compararBloques(String bloque1, String bloque2) {
         try {
-            // Extraer hora de inicio de cada bloque
             String horaInicio1 = bloque1.split("-")[0].trim();
             String horaInicio2 = bloque2.split("-")[0].trim();
             
@@ -45,7 +50,6 @@ public class RackService {
             
             return hora1.compareTo(hora2);
         } catch (Exception e) {
-            // En caso de error, usar comparación alfabética como fallback
             return bloque1.compareTo(bloque2);
         }
     }
@@ -57,10 +61,7 @@ public class RackService {
         try {
             System.out.println("🗓️ Generando rack semanal completo");
             
-            // Obtener todas las reservas
             List<ReservaDto> reservas = obtenerReservasDesdeServicio(null, null);
-            
-            // Procesar y organizar en rack semanal
             return procesarRackSemanal(reservas, null, null);
             
         } catch (Exception e) {
@@ -76,10 +77,7 @@ public class RackService {
         try {
             System.out.println("🗓️ Generando rack semanal desde " + fechaInicio + " hasta " + fechaFin);
             
-            // Obtener reservas filtradas por fechas
             List<ReservaDto> reservas = obtenerReservasDesdeServicio(fechaInicio, fechaFin);
-            
-            // Procesar y organizar en rack semanal
             return procesarRackSemanal(reservas, fechaInicio, fechaFin);
             
         } catch (Exception e) {
@@ -135,20 +133,16 @@ public class RackService {
      */
     public Map<String, Object> verificarDisponibilidadBloque(LocalDate fecha, String bloque, Integer numeroPersonas) {
         try {
-            // Obtener reservas para esa fecha específica
             List<ReservaDto> reservas = obtenerReservasDesdeServicio(fecha, fecha);
             
-            // Filtrar reservas que ocupan ese bloque
             List<ReservaDto> reservasEnBloque = reservas.stream()
-                .filter(reserva -> reservaOcupaBloque(reserva, bloque))
+                .filter(reserva -> reservaOcupaBloque(reserva, bloque, fecha))
                 .collect(Collectors.toList());
 
-            // Calcular ocupación (simplificado)
             int personasOcupadas = reservasEnBloque.stream()
                 .mapToInt(ReservaDto::getNumeroPersonas)
                 .sum();
 
-            // Asumir capacidad máxima de 20 personas por bloque (configurable)
             int capacidadMaxima = 20;
             boolean disponible = (personasOcupadas + numeroPersonas) <= capacidadMaxima;
 
@@ -168,7 +162,7 @@ public class RackService {
     }
 
     // ================================
-    // MÉTODOS PRIVADOS DE PROCESAMIENTO
+    // MÉTODOS PRIVADOS
     // ================================
 
     /**
@@ -177,15 +171,13 @@ public class RackService {
     private List<ReservaDto> obtenerReservasDesdeServicio(LocalDate fechaInicio, LocalDate fechaFin) {
         try {
             if (fechaInicio != null && fechaFin != null) {
-                // Usar endpoint con filtros de fecha
                 return reservaClient.obtenerReservasPorFechas(fechaInicio, fechaFin).getBody();
             } else {
-                // Obtener todas las reservas
                 return reservaClient.obtenerTodasLasReservas().getBody();
             }
         } catch (Exception e) {
             System.err.println("❌ Error al obtener reservas: " + e.getMessage());
-            return new ArrayList<>(); // Fallback: lista vacía
+            return new ArrayList<>();
         }
     }
 
@@ -193,23 +185,21 @@ public class RackService {
      * Procesar reservas y organizarlas en rack semanal
      */
     private RackSemanalResponse procesarRackSemanal(List<ReservaDto> reservas, LocalDate fechaInicio, LocalDate fechaFin) {
-        Map<String, Map<String, List<ReservaDto>>> rackSemanal = new LinkedHashMap<>(); // ✅ Usar LinkedHashMap para mantener orden
-
-        // Inicializar estructura del rack
+        Map<String, Map<String, List<ReservaDto>>> rackSemanal = new LinkedHashMap<>();
+        
         String[] diasSemana = {"Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"};
-        List<String> bloquesHorario = getBloquesHorario(); // ✅ Ya ordenados cronológicamente
+        List<String> bloquesHorario = getBloquesHorario();
 
-        // Inicializar días y bloques vacíos
+        // Inicializar estructura
         for (String dia : diasSemana) {
-            rackSemanal.put(dia, new LinkedHashMap<>()); // ✅ Usar LinkedHashMap para mantener orden
+            rackSemanal.put(dia, new LinkedHashMap<>());
             for (String bloque : bloquesHorario) {
                 rackSemanal.get(dia).put(bloque, new ArrayList<>());
             }
         }
 
-        // Organizar reservas en bloques
         int totalReservas = 0;
-        int bloquesOcupados = 0;
+        System.out.println("🔍 Procesando " + reservas.size() + " reservas para el rack semanal (" + fechaInicio + " - " + fechaFin + ")");
 
         for (ReservaDto reserva : reservas) {
             try {
@@ -218,22 +208,55 @@ public class RackService {
                     continue;
                 }
 
-                String dia = obtenerDiaSemana(reserva.getFechaHora().toLocalDate());
-
-                // Asignar reserva a todos los bloques que ocupa
-                for (String bloque : bloquesHorario) {
-                    if (reservaOcupaBloque(reserva, bloque)) {
-                        rackSemanal.get(dia).get(bloque).add(reserva);
-                        totalReservas++;
+                LocalDate fechaReserva = reserva.getFechaHora().toLocalDate();
+                
+                // ✅ FILTRO CRÍTICO: Verificar rango de fechas
+                if (fechaInicio != null && fechaFin != null) {
+                    if (fechaReserva.isBefore(fechaInicio) || fechaReserva.isAfter(fechaFin)) {
+                        System.out.println("⏭️ Reserva " + reserva.getId() + " fuera del rango solicitado (" + fechaReserva + ")");
+                        continue;
                     }
+                }
+
+                String dia = obtenerDiaSemana(fechaReserva);
+                
+                System.out.println("🔍 Procesando reserva " + reserva.getId() + 
+                                 " - Fecha: " + fechaReserva + 
+                                 " - Día: " + dia + 
+                                 " - Hora: " + reserva.getFechaHora().toLocalTime() +
+                                 " - Duración: " + reserva.getDuracionMinutos() + " min");
+
+                if (!rackSemanal.containsKey(dia)) {
+                    System.err.println("⚠️ Día no encontrado en rack: " + dia + " para fecha: " + fechaReserva);
+                    continue;
+                }
+
+                // ✅ CAMBIO CRÍTICO: Pasar fecha específica y agregar más logs
+                boolean reservaAsignada = false;
+                for (String bloque : bloquesHorario) {
+                    if (reservaOcupaBloque(reserva, bloque, fechaReserva)) {
+                        rackSemanal.get(dia).get(bloque).add(reserva);
+                        reservaAsignada = true;
+                        System.out.println("✅ Reserva " + reserva.getId() + " asignada al bloque " + bloque + " del " + dia);
+                    }
+                }
+                
+                if (reservaAsignada) {
+                    totalReservas++;
+                    System.out.println("✅ Reserva " + reserva.getId() + " asignada correctamente");
+                } else {
+                    System.err.println("⚠️ Reserva " + reserva.getId() + " no se asignó a ningún bloque. Hora: " + reserva.getFechaHora().toLocalTime());
+                    System.err.println("🕐 Bloques disponibles: " + bloquesHorario);
                 }
 
             } catch (Exception e) {
                 System.err.println("⚠️ Error al procesar reserva " + reserva.getId() + ": " + e.getMessage());
+                e.printStackTrace();
             }
         }
 
-        // Contar bloques ocupados
+        // Calcular estadísticas
+        int bloquesOcupados = 0;
         for (String dia : rackSemanal.keySet()) {
             for (String bloque : rackSemanal.get(dia).keySet()) {
                 if (!rackSemanal.get(dia).get(bloque).isEmpty()) {
@@ -242,11 +265,9 @@ public class RackService {
             }
         }
 
-        // Calcular porcentaje de ocupación
         int totalBloques = diasSemana.length * bloquesHorario.size();
         double porcentajeOcupacion = totalBloques > 0 ? (double) bloquesOcupados / totalBloques * 100 : 0;
 
-        // Preparar respuesta
         RackSemanalResponse response = new RackSemanalResponse();
         response.setRackSemanal(rackSemanal);
         response.setFechaInicio(fechaInicio);
@@ -255,26 +276,51 @@ public class RackService {
         response.setBloquesOcupados(bloquesOcupados);
         response.setPorcentajeOcupacion(Math.round(porcentajeOcupacion * 100.0) / 100.0);
 
-        System.out.println("✅ Rack semanal generado - " + totalReservas + " reservas, " + bloquesOcupados + "/" + totalBloques + " bloques ocupados");
+        System.out.println("✅ Rack semanal generado - " + totalReservas + " reservas procesadas, " + 
+                          bloquesOcupados + "/" + totalBloques + " bloques ocupados (" + 
+                          Math.round(porcentajeOcupacion * 100.0) / 100.0 + "% ocupación)");
+        
         return response;
     }
 
     /**
-     * Verificar si una reserva ocupa un bloque horario específico
+     * ✅ MÉTODO MEJORADO CON MÁS LOGS (con verificación de fecha)
      */
-    private boolean reservaOcupaBloque(ReservaDto reserva, String bloque) {
+    private boolean reservaOcupaBloque(ReservaDto reserva, String bloque, LocalDate fechaObjetivo) {
         try {
-            LocalTime horaInicio = reserva.getFechaHora().toLocalTime();
+            LocalDateTime fechaHoraReserva = reserva.getFechaHora();
+            LocalDate fechaReserva = fechaHoraReserva.toLocalDate();
+            
+            // ✅ VERIFICACIÓN CRÍTICA: Que la reserva sea del día correcto
+            if (!fechaReserva.equals(fechaObjetivo)) {
+                return false;
+            }
+            
+            LocalTime horaInicio = fechaHoraReserva.toLocalTime();
             LocalTime horaFin = horaInicio.plusMinutes(reserva.getDuracionMinutos());
 
             String[] partes = bloque.split("-");
-            LocalTime inicioBloque = LocalTime.parse(partes[0]);
-            LocalTime finBloque = LocalTime.parse(partes[1]);
+            if (partes.length != 2) {
+                System.err.println("⚠️ Formato de bloque inválido: " + bloque);
+                return false;
+            }
+            
+            LocalTime inicioBloque = LocalTime.parse(partes[0].trim());
+            LocalTime finBloque = LocalTime.parse(partes[1].trim());
 
-            // Verificar solapamiento
-            return horaInicio.isBefore(finBloque) && horaFin.isAfter(inicioBloque);
+            boolean solapa = horaInicio.isBefore(finBloque) && horaFin.isAfter(inicioBloque);
+            
+            // ✅ LOG DETALLADO PARA DEBUG
+            System.out.println("🔍 Verificando reserva " + reserva.getId() + 
+                             " contra bloque " + bloque + 
+                             " - ReservaHora: " + horaInicio + "-" + horaFin + 
+                             " vs BloqueHora: " + inicioBloque + "-" + finBloque + 
+                             " = " + (solapa ? "✅ SÍ" : "❌ NO"));
+            
+            return solapa;
         } catch (Exception e) {
-            System.err.println("⚠️ Error al parsear bloque horario: " + bloque);
+            System.err.println("⚠️ Error al verificar ocupación de bloque: " + bloque + 
+                              " para reserva: " + reserva.getId() + " - " + e.getMessage());
             return false;
         }
     }
@@ -283,7 +329,8 @@ public class RackService {
      * Obtener día de la semana en español
      */
     private String obtenerDiaSemana(LocalDate fecha) {
-        switch (fecha.getDayOfWeek()) {
+        DayOfWeek dayOfWeek = fecha.getDayOfWeek();
+        switch (dayOfWeek) {
             case MONDAY: return "Lunes";
             case TUESDAY: return "Martes";
             case WEDNESDAY: return "Miércoles";
@@ -291,7 +338,7 @@ public class RackService {
             case FRIDAY: return "Viernes";
             case SATURDAY: return "Sábado";
             case SUNDAY: return "Domingo";
-            default: throw new IllegalArgumentException("Día no válido: " + fecha.getDayOfWeek());
+            default: throw new IllegalArgumentException("Día de semana inválido: " + dayOfWeek);
         }
     }
 }

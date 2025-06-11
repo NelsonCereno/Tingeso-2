@@ -1,20 +1,6 @@
 import React, { useEffect, useState } from "react";
-import rackService from "../services/rack.service"; // ✅ USAR: rack.service
-import { 
-  Box, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow, 
-  Paper, 
-  Typography,
-  TextField,
-  Button,
-  CircularProgress
-} from "@mui/material";
-import { format, startOfWeek, endOfWeek, addDays, parseISO } from 'date-fns';
+import rackService from "../services/rack.service";
+import { format, startOfWeek, addDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 const RackSemanal = () => {
@@ -25,7 +11,6 @@ const RackSemanal = () => {
   const [estadisticas, setEstadisticas] = useState({});
 
   const diasSemana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
-  const bloquesHorario = ["09:00-10:00", "10:00-11:00", "11:00-12:00", "12:00-13:00", "14:00-15:00", "15:00-16:00", "16:00-17:00"];
 
   useEffect(() => {
     loadRackSemanal(selectedDate);
@@ -51,53 +36,46 @@ const RackSemanal = () => {
     
     console.log(`📅 Cargando rack semanal: ${startFormatted} - ${endFormatted}`);
     
-    // ✅ USAR: rack.service con manejo de errores mejorado
-    rackService.getRackSemanalPorFechas(startFormatted, endFormatted)
-      .then((response) => {
-        console.log("✅ Rack semanal recibido:", response.data);
-        setRackSemanal(response.data.rackSemanal || response.data);
-        
-        // ✅ NUEVO: Cargar estadísticas también
-        return rackService.getEstadisticasRack(startFormatted, endFormatted);
-      })
-      .then((statsResponse) => {
-        console.log("📊 Estadísticas recibidas:", statsResponse.data);
-        setEstadisticas(statsResponse.data);
-        setLoading(false);
-      })
-      .catch(error => {
-        console.error("❌ Error al cargar el rack semanal:", error);
-        
-        // ✅ FALLBACK: Mostrar rack vacío en caso de error
-        const emptyRack = {};
-        const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-        const bloques = ['09:00-10:00', '10:00-11:00', '11:00-12:00', '12:00-13:00', 
-                        '14:00-15:00', '15:00-16:00', '16:00-17:00', '17:00-18:00', 
-                        '18:00-19:00', '19:00-20:00'];
-        
-        dias.forEach(dia => {
-          emptyRack[dia] = {};
-          bloques.forEach(bloque => {
-            emptyRack[dia][bloque] = [];
-          });
+    // ✅ CARGAR: Rack y estadísticas
+    Promise.all([
+      rackService.getRackSemanalPorFechas(startFormatted, endFormatted),
+      rackService.getEstadisticasRack(startFormatted, endFormatted)
+    ])
+    .then(([rackResponse, statsResponse]) => {
+      console.log("✅ Rack semanal recibido:", rackResponse.data);
+      console.log("📊 Estadísticas recibidas:", statsResponse.data);
+      
+      setRackSemanal(rackResponse.data.rackSemanal || rackResponse.data);
+      setEstadisticas(statsResponse.data);
+      setLoading(false);
+    })
+    .catch(error => {
+      console.error("❌ Error al cargar el rack semanal:", error);
+      
+      // ✅ FALLBACK: Mostrar rack vacío
+      const emptyRack = {};
+      const bloques = ['09:00-10:00', '10:00-11:00', '11:00-12:00', '12:00-13:00', 
+                      '14:00-15:00', '15:00-16:00', '16:00-17:00', '17:00-18:00', 
+                      '18:00-19:00', '19:00-20:00'];
+      
+      diasSemana.forEach(dia => {
+        emptyRack[dia] = {};
+        bloques.forEach(bloque => {
+          emptyRack[dia][bloque] = [];
         });
-        
-        setRackSemanal(emptyRack);
-        setEstadisticas({ totalReservas: 0, porcentajeOcupacion: 0 });
-        setLoading(false);
-        
-        // Mostrar error al usuario
-        alert(`Error al cargar rack semanal: ${error.response?.data?.error || error.message}`);
       });
+      
+      setRackSemanal(emptyRack);
+      setEstadisticas({ totalReservas: 0, porcentajeOcupacion: 0 });
+      setLoading(false);
+      
+      alert(`Error al cargar rack semanal: ${error.response?.data?.error || error.message}`);
+    });
   };
 
   const handleDateChange = (newDate) => {
     setSelectedDate(newDate);
     loadRackSemanal(newDate);
-  };
-
-  const formatDayHeader = (date) => {
-    return `${diasSemana[date.getDay() === 0 ? 6 : date.getDay() - 1]}\n${format(date, 'd MMM', { locale: es })}`;
   };
 
   if (loading) {

@@ -31,22 +31,22 @@ const AddEditReserva = () => {
       id: "basico", 
       nombre: "Plan Básico", 
       duracionMinutos: 30, 
-      descripcion: "30 minutos de karting",
+      descripcion: "10 vueltas o máx 10 min - Duración total: 30 min",
       precio: 15000 
     },
     { 
       id: "intermedio", 
       nombre: "Plan Intermedio", 
-      duracionMinutos: 60, 
-      descripcion: "1 hora de karting",
-      precio: 25000 
+      duracionMinutos: 35, 
+      descripcion: "15 vueltas o máx 15 min - Duración total: 35 min",
+      precio: 20000 
     },
     { 
       id: "premium", 
-      nombre: "Plan Premium", 
-      duracionMinutos: 90, 
-      descripcion: "1.5 horas de karting",
-      precio: 35000 
+      nombre: "Plan Avanzado", 
+      duracionMinutos: 40, 
+      descripcion: "20 vueltas o máx 20 min - Duración total: 40 min",
+      precio: 25000 
     }
   ];
 
@@ -149,9 +149,9 @@ const AddEditReserva = () => {
 
   const generarHorariosDisponibles = () => {
     const horarios = [];
-    for (let hora = 8; hora <= 20; hora++) {
+    for (let hora = 9; hora <= 20; hora++) {    // Cambio: empezar en 9 en lugar de 8
       horarios.push(`${hora.toString().padStart(2, '0')}:00`);
-      horarios.push(`${hora.toString().padStart(2, '0')}:30`);
+      // Removido: horarios.push(`${hora.toString().padStart(2, '0')}:30`);
     }
     return horarios;
   };
