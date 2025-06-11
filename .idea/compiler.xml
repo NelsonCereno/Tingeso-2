@@ -6,18 +6,19 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="config-service" />
+        <module name="descuento-cumpleanos-service" />
+        <module name="descuento-personas-service" />
         <module name="eureka-service" />
         <module name="descuento-cumpleanos-service (4)" />
         <module name="tarifa-service" />
         <module name="descuento-cumpleanos-service (5)" />
         <module name="descuento-cumpleanos-service (2)" />
-        <module name="config-service" />
         <module name="descuento-cumpleanos-service (3)" />
-        <module name="descuento-cumpleanos-service" />
         <module name="descuento-cumpleanos-service (1)" />
         <module name="gateway-service" />
         <module name="student-service" />
-        <module name="descuento-personas-service" />
+        <module name="descuento-cumpleanos-service (6)" />
       </profile>
     </annotationProcessing>
   </component>
@@ -30,6 +31,7 @@
       <module name="descuento-cumpleanos-service (3)" options="-parameters" />
       <module name="descuento-cumpleanos-service (4)" options="-parameters" />
       <module name="descuento-cumpleanos-service (5)" options="-parameters" />
+      <module name="descuento-cumpleanos-service (6)" options="-parameters" />
       <module name="descuento-personas-service" options="-parameters" />
       <module name="eureka-service" options="-parameters" />
       <module name="gateway-service" options="-parameters" />
