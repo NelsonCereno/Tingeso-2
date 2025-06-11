@@ -58,6 +58,7 @@ const ReporteIngresosVueltas = () => {
       const response = await reportsService.getReporteIngresosPorVueltas(fechaInicio, fechaFin);
       
       console.log("✅ Datos del reporte recibidos:", response.data);
+      console.log("🔍 Detalles por vueltas:", response.data.detallesPorVueltas); // ⭐ AGREGAR ESTA LÍNEA
       setReporteData(response.data);
 
     } catch (error) {

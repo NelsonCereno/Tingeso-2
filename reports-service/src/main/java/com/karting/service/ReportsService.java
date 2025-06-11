@@ -514,7 +514,7 @@ public class ReportsService {
     }
 
     /**
-     * Calcula vueltas aproximadas basado en duración
+     * Calcula vueltas aproximadas basado en duración según los planes disponibles
      */
     private int calcularVueltasAproximadas(ReservaDto reserva) {
         Integer duracion = reserva.getDuracionMinutos();
@@ -522,8 +522,22 @@ public class ReportsService {
             return 0;
         }
         
-        // Asumir que cada vuelta toma aproximadamente 2-3 minutos
-        // Esto es solo una estimación
-        return Math.max(1, duracion / 3);
+        // ✅ MAPEO CORRECTO basado en tus planes reales
+        if (duracion == 30) {
+            return 10;  // Plan Básico: 30 min → 10 vueltas
+        } else if (duracion == 35) {
+            return 15;  // Plan Intermedio: 35 min → 15 vueltas  
+        } else if (duracion == 40) {
+            return 20;  // Plan Premium: 40 min → 20 vueltas
+        } else {
+            // Para duraciones no estándar, usar lógica aproximada
+            if (duracion <= 32) {
+                return 10;
+            } else if (duracion <= 37) {
+                return 15;
+            } else {
+                return 20;
+            }
+        }
     }
 }
