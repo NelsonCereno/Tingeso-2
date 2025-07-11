@@ -1,0 +1,161 @@
+ARQUITECTURA GENERAL
+
+Paso 1: Identificar Componentes de Infraestructura
+
+CONFIG SERVER: Centraliza configuraciones de todos los microservicios
+EUREKA SERVER: Service Discovery - registro y descubrimiento automático
+GATEWAY SERVICE: API Gateway - punto de entrada único con enrutamiento
+CONFIG DATA: Archivos de configuración (.yml) por ambiente
+
+
+Paso 2: Identificar Microservicios de Negocio
+
+RESERVA-SERVICE: Orquestador principal de todas las operaciones
+CLIENTE-SERVICE: Gestión de clientes y sus datos
+KART-SERVICE: Gestión de karts y disponibilidad
+TARIFA-SERVICE: Cálculo de tarifas base
+DESCUENTO-*-SERVICES: Servicios especializados en descuentos
+RACK-SERVICE: Gestión del rack semanal
+REPORTS-SERVICE: Generación de reportes
+
+COMUNICACIÓN ENTRE MICROSERVICIOS
+
+Paso 3: Explicar Service Discovery
+
+Cada microservicio se registra en Eureka con @EnableEurekaClient
+Los servicios se encuentran por nombre, no por IP/Puerto
+Balanceo de carga automático entre instancias
+
+Paso 4: Explicar FeignClient vs RestTemplate
+FEIGNCLIENT (Tu implementación):
+
+@FeignClient(name = "tarifa-service")
+public interface TarifaClient {
+    @GetMapping("/api/v1/tarifas/calcular")
+    ResponseEntity<Double> calcularTarifa(@RequestParam("duracion") Integer duracionMinutos);
+}
+
+VENTAJAS DE FEIGN:
+
+Código declarativo vs imperativo
+Service Discovery automático
+Menos boilerplate
+Type safety
+Integración natural con Spring Cloud
+
+IMPLEMENTACIÓN DEL FRONTEND
+
+Paso 5: Arquitectura Frontend
+Framework: React.js con componentes
+Comunicación: HTTP REST APIs via Axios
+Patrón: Component-based architecture
+Servicios: Separación de lógica de comunicación
+
+Paso 6: Servicios del Frontend
+
+// reserva.service.js
+const crear = (data) => {
+  return httpClient.post("/reserva-service/api/v1/reservas", data);
+};
+
+// Base URL apunta al Gateway
+const API_URL = "http://localhost:8080";
+
+Paso 7: Componentes Clave
+AddEditReserva.jsx: Formulario de creación/edición
+ReservaList.jsx: Lista y gestión de reservas
+RackSemanal.jsx: Visualización del rack
+Reportes.jsx*: Diferentes tipos de reportes
+
+FLUJO DE DATOS COMPLETO: CREAR RESERVA
+Paso 8: Frontend → Gateway
+
+// 1. Usuario completa formulario
+const reservaRequest = {
+    fechaHora: "2025-06-15T14:30:00",
+    duracionMinutos: 40,
+    numeroPersonas: 3,
+    clientesIds: [1, 2, 3],
+    kartsIds: null // asignación automática
+};
+
+// 2. Llamada HTTP
+const response = await reservaService.create(reservaRequest);
+
+Paso 9: Gateway → Microservicio
+
+# Gateway enruta automáticamente
+/reserva-service/** → lb://reserva-service:8081
+
+Paso 10: Orquestación en ReservaService
+
+@Transactional
+public ReservaResponse crearReserva(ReservaRequest request) {
+    // 1. Validaciones
+    validarReservaRequest(request);
+    
+    // 2. Verificar clientes (FeignClient → cliente-service)
+    verificarExistenciaClientes(request.getClientesIds());
+    
+    // 3. Asignar karts (FeignClient → kart-service)
+    List<Long> kartsAsignados = asignarKarts(request);
+    
+    // 4. Calcular precio (FeignClient → tarifa-service + descuentos)
+    CalculoPrecioResponse precio = calcularPrecioCompleto(request);
+    
+    // 5. Guardar en BD
+    ReservaEntity reserva = new ReservaEntity(/*parámetros*/);
+    ReservaEntity guardada = reservaRepository.save(reserva);
+    
+    // 6. Actualizar estados en otros servicios
+    reservarKartsEnServicio(kartsAsignados);
+    incrementarVisitasClientes(request.getClientesIds());
+    
+    return new ReservaResponse(guardada);
+}
+
+Paso 11: Llamadas Paralelas a Microservicios
+
+// Cálculo de precio involucra múltiples servicios:
+- tarifaClient.calcularTarifa() → tarifa-service:8084
+- descuentoPersonasClient.calcular() → descuento-personas-service:8085
+- clienteClient.obtenerVisitas() → cliente-service:8082
+- descuentoCumpleanosClient.verificar() → descuento-cumpleanos-service:8087
+
+Paso 15: API Gateway Pattern
+Punto de entrada único
+Enrutamiento automático
+Balanceo de carga
+Seguridad centralizada
+Paso 16: Orchestration Pattern
+ReservaService actúa como orquestador
+Coordina múltiples microservicios
+Maneja la lógica de negocio compleja
+Implementa fallbacks para tolerancia a fallos
+
+RESPUESTAS RÁPIDAS PARA EXAMEN
+¿Qué hace Eureka?
+"Service Discovery - permite que los microservicios se registren y se encuentren automáticamente sin hardcodear IPs"
+
+¿Por qué Gateway?
+"Punto de entrada único, enrutamiento automático, balanceo de carga y seguridad centralizada"
+
+¿Cómo se comunican los microservicios?
+"FeignClients para comunicación síncrona con service discovery automático vía Eureka"
+
+¿Qué pasa si falla un servicio?
+"Implementamos fallbacks locales, como simular datos o valores por defecto para mantener funcionalidad básica"
+
+¿Cómo funciona el flujo de reserva?
+"Frontend → Gateway → ReservaService (orquestador) → Múltiples microservicios en paralelo → Bases de datos → Respuesta al frontend"
+
+¿Por qué microservicios?
+"Escalabilidad independiente, tecnologías específicas por dominio, deployments independientes, y tolerancia a fallos"
+
+
+
+
+
+
+
+

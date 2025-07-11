@@ -1,0 +1,184 @@
+cd C:\Users\nelof\Desktop\hola\Tingeso-2\deployment
+
+En caso de problemas con docker 
+docker context use default 
+
+minikube stop
+minikube delete
+
+Inicializar la VM
+minikube start --driver=hyperv 
+
+
+minikube ip
+kubectl get svc
+
+kubectl get deployments
+kubectl delete deployment
+
+kubectl get service
+kubectl delete service
+
+kubectl get pvc
+kubectl delete pvc
+
+kubectl get pv
+kubectl delete pv
+
+docker build -t nelsoncereno/config-server .
+docker push nelsoncereno/config-server
+
+docker build -t nelsoncereno/eureka-service .
+docker push nelsoncereno/eureka-service
+
+docker build -t nelsoncereno/gateway-service .
+docker push nelsoncereno/gateway-service
+
+docker build -t nelsoncereno/tarifa-service .
+docker push nelsoncereno/tarifa-service
+
+docker build -t nelsoncereno/reserva-service .
+docker push nelsoncereno/reserva-service
+
+docker build -t nelsoncereno/kart-service .
+docker push nelsoncereno/kart-service
+
+docker build -t nelsoncereno/cliente-service .
+docker push nelsoncereno/cliente-service
+
+docker build -t nelsoncereno/descuento-personas-service .
+docker push nelsoncereno/descuento-personas-service
+
+docker build -t nelsoncereno/descuento-cumpleanos-service .
+docker push nelsoncereno/descuento-cumpleanos-service
+
+docker build -t nelsoncereno/descuento-clientes-service .
+docker push nelsoncereno/descuento-clientes-service
+
+docker build -t nelsoncereno/reports-service .
+docker push nelsoncereno/reports-service
+
+docker build -t nelsoncereno/rack-service .
+docker push nelsoncereno/rack-service
+
+npm install
+npm run build  
+docker build -t nelsoncereno/payroll-frontend .   
+docker push nelsoncereno/payroll-frontend    
+
+subir los archivos a kubernetes
+
+kubectl apply -f postgres-secrets.yaml
+kubectl apply -f config-service-deployment.yaml
+kubectl apply -f eureka-service-deployment.yaml
+kubectl apply -f gateway-service-deployment.yaml
+
+kubectl apply -f db-tarifa-service.yaml
+kubectl exec -it (pod bdd) -- /bin/bash
+psql -U postgres
+create database "tarifaduracionreservas";
+exit 
+exit
+kubectl apply -f tarifa-service-deployment.yaml
+
+
+kubectl apply -f db-reserva-service.yaml
+kubectl exec -it (pod bdd) -- /bin/bash
+psql -U postgres
+create database "reservas2";
+exit 
+exit
+kubectl apply -f reserva-service-deployment.yaml
+
+
+kubectl apply -f db-kart-service-deployment.yaml
+kubectl exec -it (pod bdd) -- /bin/bash
+psql -U postgres
+create database "karts";
+exit 
+exit
+kubectl apply -f kart-service-deployment.yaml
+
+
+kubectl apply -f db-cliente-service-deployment.yaml
+kubectl exec -it (pod bdd) -- /bin/bash
+psql -U postgres
+create database "clientes";
+exit 
+exit
+kubectl apply -f cliente-service-deployment.yaml
+
+
+kubectl apply -f db-descuento-personas-service.yaml
+kubectl exec -it (pod bdd) -- /bin/bash
+psql -U postgres
+create database "descuentopersonas";
+exit 
+exit
+kubectl apply -f descuento-personas-service-deployment.yaml
+
+
+kubectl apply -f db-descuento-cumpleanos-service.yaml
+kubectl exec -it (pod bdd) -- /bin/bash
+psql -U postgres
+create database "tarifadiasespeciales";
+exit 
+exit
+kubectl apply -f descuento-cumpleanos-service.yaml
+
+kubectl apply -f db-descuento-clientes-service.deployment.yaml
+kubectl exec -it (pod bdd) -- /bin/bash
+psql -U postgres
+create database "descuentofrecuentes";
+exit 
+exit
+kubectl apply -f descuento-clientes-service.deployment.yaml
+
+
+kubectl apply -f reports-service-deployment.yaml
+
+kubectl apply -f rack-service-deployment.yaml
+
+kubectl apply -f frontend-deployment.yaml
+
+
+
+kubectl get pods
+kubectl logs -f
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
